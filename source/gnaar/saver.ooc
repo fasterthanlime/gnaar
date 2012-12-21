@@ -52,12 +52,12 @@ LevelSaver: class {
     emitLayer: func (layer: EditorLayer) -> SequenceNode {
         seq := SequenceNode new()
 
-        for (object in layer objects) {
+        layer eachObject(|object|
             objMap := emitObject(object)
             if (objMap) {
                 seq add(objMap)
             }
-        }
+        )
 
         seq
     }

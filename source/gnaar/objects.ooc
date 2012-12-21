@@ -63,25 +63,94 @@ ObjectFactory: abstract class {
 
 }
 
-EditorLayer: class extends LayerBase {
+EditorLayer: abstract class extends LayerBase {
 
-    moving := false
-
-    logger: Logger
+    name: String
     factories := HashMap<String, ObjectFactory> new()
-    objects := ArrayList<EditorObject> new()
-    ui: GnUI
-
-    selectedObjects := ArrayList<EditorObject> new()
 
     group: GlGroup
 
-    name: String
+    logger: Logger
+    ui: GnUI
 
     init: func (=ui, =name) {
         group = GlGroup new()
         ui layerGroup add(group)
         logger = Log getLogger("layer: %s" format(name))
+    }
+
+    add: abstract func (object: EditorObject) -> EditorObject
+
+    remove: abstract func (object: EditorObject)
+
+    update: abstract func
+
+    click: func {
+
+    }
+
+    dragStart: func (handStart: Vec2) {
+
+    }
+
+    dragEnd: func {
+
+    }
+
+    drag: func (delta: Vec2) {
+
+    }
+
+    insert: func {
+
+    }
+
+    clearSelection: func {
+
+    }
+
+    deleteSelected: func {
+
+    }
+
+    destroy: abstract func {
+
+    }
+
+    eachObject: abstract func (f: Func(EditorObject))
+
+    spawn: func (family: String, name: String, pos: Vec2) -> GnObject {
+        factory := getFactory(family)
+        if (factory) {
+            factory spawn(name, pos)
+        } else {
+            null
+        }
+    }
+
+    addFactory: func (factory: ObjectFactory) {
+        factories put(factory family, factory)
+    }
+
+    getFactory: func (family: String) -> ObjectFactory {
+        if (!factories contains?(family)) {
+            logger warn("No such factory: %s (for layer %s)" format(family, name))
+            return null
+        }
+
+        factories get(family)
+    }
+
+}
+
+DragLayer: class extends EditorLayer {
+
+    moving := false
+    objects := ArrayList<EditorObject> new()
+    selectedObjects := ArrayList<EditorObject> new()
+
+    init: func (.ui, .name) {
+        super(ui, name)
     }
 
     add: func (object: EditorObject) -> EditorObject {
@@ -97,11 +166,23 @@ EditorLayer: class extends LayerBase {
         group remove(object group)
     }
 
-    insert: func
-
     update: func {
         for (o in objects) {
             o update()
+        }
+    }
+
+    destroy: func {
+        while (!objects empty?()) {
+            objects get(0) destroy()
+        }
+        ui layerGroup remove(group)
+        ui layers remove(this)
+    }
+
+    eachObject: func (f: Func(EditorObject)) {
+        for (object in objects) {
+            f(object)
         }
     }
 
@@ -234,36 +315,6 @@ EditorLayer: class extends LayerBase {
         }
     }
 
-    destroy: func {
-        while (!objects empty?()) {
-            objects get(0) destroy()
-        }
-        ui layerGroup remove(group)
-        ui layers remove(this)
-    }
-
-    spawn: func (family: String, name: String, pos: Vec2) -> GnObject {
-        factory := getFactory(family)
-        if (factory) {
-            factory spawn(name, pos)
-        } else {
-            null
-        }
-    }
-
-    addFactory: func (factory: ObjectFactory) {
-        factories put(factory family, factory)
-    }
-
-    getFactory: func (family: String) -> ObjectFactory {
-        if (!factories contains?(family)) {
-            logger warn("No such factory: %s (for layer %s)" format(family, name))
-            return null
-        }
-
-        factories get(family)
-    }
-
 }
 
 GnObject: abstract class {
@@ -289,11 +340,13 @@ EditorObject: abstract class extends GnObject {
 
     family, name: String
 
-    init: func (=family, =name) {
+    init: func (=family, =name, initPos: Vec2) {
         group = GlGroup new()
         outlineGroup = GlGroup new()
         outlineGroup visible = false
         group add(outlineGroup)
+
+        pos set!(initPos)
     }
 
     remove: func {
@@ -348,8 +401,8 @@ ImageObject: abstract class extends EditorObject {
 
     sprite: GlSprite
 
-    init: func (=name, initPos: Vec2, path: String) {
-        super("prop", name)
+    init: func (.family, .name, initPos: Vec2, path: String) {
+        super(family, name, initPos)
 
         sprite = GlSprite new(path)
         group add(sprite)
@@ -360,8 +413,6 @@ ImageObject: abstract class extends EditorObject {
         rect filled = false
         rect lineWidth = 2.0
         outlineGroup add(rect)
-
-        pos set!(initPos)
     }
 
     contains?: func (hand: Vec2) -> Bool {

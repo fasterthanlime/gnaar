@@ -31,8 +31,8 @@ PropFactory: class extends ObjectFactory {
 
 PropObject: class extends ImageObject {
 
-    init: func (=name, initPos: Vec2) {
-        super("prop", name, "assets/png/%.png" format(name))
+    init: func (.name, initPos: Vec2) {
+        super("prop", name, initPos, "assets/png/%s.png" format(name))
     }
 
     clone: func -> This {
@@ -43,7 +43,7 @@ PropObject: class extends ImageObject {
 
 }
 
-PropLayer: class extends EditorLayer {
+PropLayer: class extends DragLayer {
 
     init: func (.ui, .name) {
         super(ui, name)
