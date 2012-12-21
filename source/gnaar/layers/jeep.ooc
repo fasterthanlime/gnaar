@@ -111,12 +111,22 @@ JeepLayer: class extends EditorLayer {
     dragEnd: func {
     }
 
+    notifyNeighbors: func (col, row: Int) {
+        grid notify(col, row)
+        grid notify(col - 1, row)
+        grid notify(col + 1, row)
+        grid notify(col, row - 1)
+        grid notify(col, row + 1)
+    }
+
     add: func (object: EditorObject) -> EditorObject {
         match (object) {
             case jo: JeepObject =>
                 object layer = this
                 group add(object group)
                 grid put(jo col, jo row, jo)
+                notifyNeighbors(jo col, jo row)
+
                 object
             case =>
                 logger warn("Can not add %s to %s" format(object class name, This name))
@@ -130,6 +140,8 @@ JeepLayer: class extends EditorLayer {
                 object layer = null
                 group remove(object group)
                 grid remove(jo col, jo row)
+                notifyNeighbors(jo col, jo row)
+
                 object
             case =>
                 logger warn("Can not add %s to %s" format(object class name, This name))
@@ -208,6 +220,13 @@ SparseGrid: class {
         getRow(row) remove(col)
     }
 
+    notify: func (col, row: Int) {
+        obj := get(col, row)
+        if (obj) {
+            obj notify(this)
+        }
+    }
+
     get: func (col, row: Int) -> JeepObject {
         getRow(row) get(col)
     }
@@ -256,8 +275,15 @@ JeepObject: class extends EditorObject {
 
     sprite: GlGridSprite
 
-    col: Int { get { ceil(- 0.5 + (pos x / side as Float)) } }
-    row: Int { get { ceil(- 0.5 + (pos y / side as Float)) } }
+    posi: Vec2i
+
+    col: Int { get { posi x } }
+    row: Int { get { posi y } }
+
+    top    := false
+    bottom := false
+    left   := false
+    right  := false
 
     init: func (=def, initPos: Vec2) {
         super("jeep", def name, initPos)
@@ -267,8 +293,50 @@ JeepObject: class extends EditorObject {
         group add(sprite)
 
         snap!(sprite size, side)
-        //"Sprite size = %s, snapped to %s" printfln(sprite size _, pos _)
+        posi = pos getColRow(side)
+
         group pos set!(pos)
+    }
+
+    notify: func (grid: SparseGrid) {
+        //"%s being notified" printfln(posi _)
+
+        top    = (grid get(posi x, posi y - 1) != null)
+        bottom = (grid get(posi x, posi y + 1) != null)
+        left   = (grid get(posi x - 1, posi y) != null)
+        right  = (grid get(posi x + 1, posi y) != null)
+
+        block := vec2i(-1, -1)
+
+        if (top) {
+            if (bottom) {
+                block y = 2
+            } else {
+                block y = 3
+            }
+        } else {
+            if (bottom) {
+                block y = 1
+            } else {
+                block y = 0
+            }
+        }
+
+        if (left) {
+            if (right) {
+                block x = 2
+            } else {
+                block x = 3
+            }
+        } else {
+            if (right) {
+                block x = 1
+            } else {
+                block x = 0
+            }
+        }
+        sprite x = block x
+        sprite y = block y
     }
 
     contains?: func (hand: Vec2) -> Bool {
