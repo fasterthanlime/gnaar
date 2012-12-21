@@ -254,7 +254,15 @@ EditorLayer: class extends LayerBase {
 
     spawn: func (family: String, name: String, pos: Vec2) -> GnObject {
         factory := getFactory(family)
-        factory spawn(name, pos)
+        if (factory) {
+            factory spawn(name, pos)
+        } else {
+            null
+        }
+    }
+
+    addFactory: func (factory: ObjectFactory) {
+        factories put(factory family, factory)
     }
 
     getFactory: func (family: String) -> ObjectFactory {
@@ -272,6 +280,8 @@ PropLayer: class extends EditorLayer {
 
     init: func (.ui, .name) {
         super(ui, name)
+
+        addFactory(PropFactory new(this))
     }
 
     insert: func {
@@ -284,7 +294,7 @@ PropLayer: class extends EditorLayer {
 
 GnObject: abstract class {
 
-    load: func (map: MappingNode) {
+    load: func (map: HashMap<String, DocumentNode>) {
         // by default, no property besides family or name
     }
 

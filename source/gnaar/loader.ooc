@@ -74,7 +74,10 @@ LevelLoader: class {
         name := map get("name") toScalar()
         pos := map get("pos") toVec2()
 
-        layer spawn(family, name, pos)
+        object := layer spawn(family, name, pos)
+        if (object) {
+            object load(map)
+        }
     }
 
 }
