@@ -1,4 +1,5 @@
 
+/* libs */
 import dye/[core, input, sprite, font, math, primitives]
 
 use sdl
@@ -10,10 +11,11 @@ import yaml/[Document]
 import math
 import structs/[ArrayList, Stack, HashMap, List]
 
-import gnaar/[ui, loader, saver, dialogs]
-
 use deadlogger
 import deadlogger/[Log, Logger]
+
+/* internal */
+import gnaar/[ui, loader, saver, dialogs]
 
 InvalidInputException: class extends Exception {
     
@@ -53,23 +55,9 @@ ObjectFactory: abstract class {
     layer: EditorLayer
     family: String
 
-    init: func (=layer, =family) {
-        "%s object factory created" printfln(family)
-    }
+    init: func (=layer, =family)
 
     spawn: abstract func (name: String, pos: Vec2) -> GnObject
-
-}
-
-PropFactory: class extends ObjectFactory {
-
-    init: func (.layer) {
-        super(layer, "prop")
-    }
-
-    spawn: func (name: String, pos: Vec2) -> GnObject {
-        layer add(PropObject new(name, pos))
-    }
 
 }
 
@@ -276,22 +264,6 @@ EditorLayer: class extends LayerBase {
 
 }
 
-PropLayer: class extends EditorLayer {
-
-    init: func (.ui, .name) {
-        super(ui, name)
-
-        addFactory(PropFactory new(this))
-    }
-
-    insert: func {
-        ui push(InputDialog new(ui, "Enter prop name", |name|
-            spawn("prop", name, ui handPos())
-        ))
-    }
-
-}
-
 GnObject: abstract class {
 
     load: func (map: HashMap<String, DocumentNode>) {
@@ -369,22 +341,21 @@ EditorObject: abstract class extends GnObject {
     getFamily: abstract func -> String
 }
 
-PropObject: class extends EditorObject {
+ImageObject: abstract class extends EditorObject {
 
-    PROP_COLOR := static Color new(0, 160, 160)
+    OUTLINE_COLOR := static Color new(0, 160, 160)
 
     sprite: GlSprite
 
-    init: func (=name, initPos: Vec2) {
+    init: func (=name, initPos: Vec2, path: String) {
         super("prop", name)
 
-        path := "assets/png/%s.png" format(name)
         sprite = GlSprite new(path)
         group add(sprite)
 
         rect := GlRectangle new()
         rect size set!(sprite size)
-        rect color = PROP_COLOR
+        rect color = OUTLINE_COLOR
         rect filled = false
         rect lineWidth = 2.0
         outlineGroup add(rect)
@@ -398,16 +369,6 @@ PropObject: class extends EditorObject {
 
     snap!: func (gridSize: Int) {
         snap!(sprite size, gridSize)
-    }
-
-    clone: func -> This {
-        c := new(name, pos)
-        c pos set!(pos)
-        c
-    }
-
-    getFamily: func -> String {
-        "prop"
     }
 
 }
