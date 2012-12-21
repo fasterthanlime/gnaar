@@ -146,6 +146,14 @@ extend String {
 
 }
 
+extend Bool {
+
+    toScalar: func -> ScalarNode {
+        (this ? "true" : "false") toScalar()
+    }
+
+}
+
 extend Vec2 {
 
     toSeq: func -> SequenceNode {

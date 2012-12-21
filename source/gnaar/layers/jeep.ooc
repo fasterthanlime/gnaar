@@ -305,43 +305,45 @@ JeepObject: class extends EditorObject {
     }
 
     notify: func (grid: SparseGrid) {
-
         top    = (grid get(posi x, posi y - 1) != null)
         bottom = (grid get(posi x, posi y + 1) != null)
         left   = (grid get(posi x - 1, posi y) != null)
         right  = (grid get(posi x + 1, posi y) != null)
 
-        block := vec2i(-1, -1)
-
-        if (top) {
-            if (bottom) {
-                block y = 2
-            } else {
-                block y = 3
-            }
-        } else {
-            if (bottom) {
-                block y = 1
-            } else {
-                block y = 0
-            }
-        }
-
+        sprite x = leftRightToX(left, right)
+        sprite y = topBottomToY(top, bottom)
+    }
+    
+    leftRightToX: static func (left, right: Bool) -> Int {
         if (left) {
             if (right) {
-                block x = 2
+                2
             } else {
-                block x = 3
+                3
             }
         } else {
             if (right) {
-                block x = 1
+                1
             } else {
-                block x = 0
+                0
             }
         }
-        sprite x = block x
-        sprite y = block y
+    }
+
+    topBottomToY: static func (top, bottom: Bool) -> Int {
+        if (top) {
+            if (bottom) {
+                2
+            } else {
+                3
+            }
+        } else {
+            if (bottom) {
+                1
+            } else {
+                0
+            }
+        }
     }
 
     contains?: func (hand: Vec2) -> Bool {
@@ -356,6 +358,22 @@ JeepObject: class extends EditorObject {
         c := new(def, pos)
         c pos set!(pos)
         c
+    }
+
+    load: func (map: HashMap<String, DocumentNode>) {
+        if (map get("top")) { // old format won't have this
+            top    = map get("top") toBool()
+            bottom = map get("bottom") toBool()
+            left   = map get("left") toBool()
+            right  = map get("right") toBool()
+        }
+    }
+
+    emit: func (map: MappingNode) {
+        map put("top", top toScalar())
+        map put("bottom", bottom toScalar())
+        map put("left", left toScalar())
+        map put("right", right toScalar())
     }
 
 }
