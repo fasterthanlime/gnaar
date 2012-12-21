@@ -1,16 +1,16 @@
 
-import legithief/[level, utils, item, tile, prop]
-import legithief/[level-loader]
-
 import dye/[core, input, sprite, font, math, primitives]
 
 use sdl
 import sdl/[Core]
 
-import math
-import structs/[ArrayList, Stack, HashMap]
+use yaml
+import yaml/[Document]
 
-import gnaar/[ui]
+import math
+import structs/[ArrayList, Stack, HashMap, List]
+
+import gnaar/[ui, loader, saver, dialogs]
 
 use deadlogger
 import deadlogger/[Log, Logger]
@@ -24,30 +24,51 @@ InvalidInputException: class extends Exception {
 LevelBase: abstract class {
 
     reset: abstract func
-    getLayer: abstract func (key: String) -> LayerBase
-    setHeroPos: abstract func (pos: Vec2)
+    getLayer: abstract func (index: Int) -> LayerBase
+    getLayerByName: abstract func (name: String) -> LayerBase
 
 }
 
-LayerBase: class {
+LayerBase: abstract class {
 
     level: LevelBase
     name: String
 
     init: func (=level, =name) {
-        "Created layer %s" printfln()
+        "Created layer %s" printfln(name)
     }
 
-    spawn: abstract func (family: String, name: String, pos: Vec2)
+    spawn: abstract func (family: String, name: String, pos: Vec2) -> GnObject
+
+}
+
+LayerFactory: abstract class {
+
+    spawnLayers: abstract func (ui: GnUI)
 
 }
 
 ObjectFactory: abstract class {
 
+    layer: EditorLayer
     family: String
 
-    spawn: abstract func (name: String, pos: Vec2) {
+    init: func (=layer, =family) {
+        "%s object factory created" printfln(family)
+    }
 
+    spawn: abstract func (name: String, pos: Vec2) -> GnObject
+
+}
+
+PropFactory: class extends ObjectFactory {
+
+    init: func (.layer) {
+        super(layer, "prop")
+    }
+
+    spawn: func (name: String, pos: Vec2) -> GnObject {
+        layer add(PropObject new(name, pos))
     }
 
 }
@@ -57,8 +78,9 @@ EditorLayer: class extends LayerBase {
     moving := false
 
     logger: Logger
+    factories := HashMap<String, ObjectFactory> new()
     objects := ArrayList<EditorObject> new()
-    ui: UI
+    ui: GnUI
 
     selectedObjects := ArrayList<EditorObject> new()
 
@@ -72,10 +94,11 @@ EditorLayer: class extends LayerBase {
         logger = Log getLogger("layer: %s" format(name))
     }
 
-    add: func (object: EditorObject) {
+    add: func (object: EditorObject) -> EditorObject {
         object layer = this
         objects add(object)
         group add(object group)
+        object
     }
 
     remove: func (object: EditorObject) {
@@ -229,16 +252,26 @@ EditorLayer: class extends LayerBase {
         ui layers remove(this)
     }
 
-    spawn: func (family: String, name: String, pos: Vec2) {
+    spawn: func (family: String, name: String, pos: Vec2) -> GnObject {
         factory := getFactory(family)
         factory spawn(name, pos)
+    }
+
+    getFactory: func (family: String) -> ObjectFactory {
+        if (!factories contains?(family)) {
+            logger warn("No such factory: %s (for layer %s)" format(family, name))
+            return null
+        }
+
+        factories get(family)
     }
 
 }
 
 PropLayer: class extends EditorLayer {
 
-    init: super func {
+    init: func (.ui, .name) {
+        super(ui, name)
     }
 
     insert: func {
@@ -249,7 +282,19 @@ PropLayer: class extends EditorLayer {
 
 }
 
-EditorObject: class {
+GnObject: abstract class {
+
+    load: func (map: MappingNode) {
+        // by default, no property besides family or name
+    }
+
+    emit: func (map: MappingNode) {
+        // by default, no property besides family or name
+    }
+
+}
+
+EditorObject: abstract class extends GnObject {
 
     pos := vec2(0, 0)
 
@@ -258,7 +303,9 @@ EditorObject: class {
     group: GlGroup
     outlineGroup: GlGroup
 
-    init: func {
+    family, name: String
+
+    init: func (=family, =name) {
         group = GlGroup new()
         outlineGroup = GlGroup new()
         outlineGroup visible = false
@@ -309,77 +356,7 @@ EditorObject: class {
         pos set!(pos sub(halfSize) snap(gridSize) add(halfSize))
     }
 
-}
-
-HeroObject: class extends EditorObject {
-
-    CHARACTER_COLOR := static Color new(180, 0, 0)
-
-    sprite: GlSprite
-
-    init: func {
-        super()
-
-        sprite = GlSprite new("assets/png/hero/hero-01.png")
-        group add(sprite)
-
-        rect := GlRectangle new()
-        rect size set!(sprite size)
-        rect color = CHARACTER_COLOR
-        rect filled = false
-        rect lineWidth = 2.0
-        outlineGroup add(rect)
-    }
-
-    remove: func {
-        // the hero can't be destroyed!
-    }
-
-    contains?: func (hand: Vec2) -> Bool {
-        contains?(sprite size, hand)
-    }
-
-    snap!: func (gridSize: Int) {
-        snap!(sprite size, gridSize)
-    }
-
-}
-
-ItemObject: class extends EditorObject {
-
-    ITEM_COLOR := static Color new(0, 160, 0)
-
-    sprite: GlSprite
-    def: ItemDef
-
-    init: func (=def) {
-        super()
-
-        sprite = GlSprite new(def image)
-        group add(sprite)
-
-        rect := GlRectangle new()
-        rect size set!(sprite size)
-        rect color = ITEM_COLOR
-        rect filled = false
-        rect lineWidth = 2.0
-        outlineGroup add(rect)
-    }
-
-    contains?: func (hand: Vec2) -> Bool {
-        contains?(sprite size, hand)
-    }
-
-    snap!: func (gridSize: Int) {
-        snap!(sprite size, gridSize)
-    }
-
-    clone: func -> This {
-        c := new(def)
-        c pos set!(pos)
-        c
-    }
-
+    getFamily: abstract func -> String
 }
 
 PropObject: class extends EditorObject {
@@ -387,12 +364,12 @@ PropObject: class extends EditorObject {
     PROP_COLOR := static Color new(0, 160, 160)
 
     sprite: GlSprite
-    def: PropDef
 
-    init: func (=def) {
-        super()
+    init: func (=name, initPos: Vec2) {
+        super("prop", name)
 
-        sprite = GlSprite new(def image)
+        path := "assets/png/%s.png" format(name)
+        sprite = GlSprite new(path)
         group add(sprite)
 
         rect := GlRectangle new()
@@ -401,6 +378,8 @@ PropObject: class extends EditorObject {
         rect filled = false
         rect lineWidth = 2.0
         outlineGroup add(rect)
+
+        pos set!(initPos)
     }
 
     contains?: func (hand: Vec2) -> Bool {
@@ -412,46 +391,13 @@ PropObject: class extends EditorObject {
     }
 
     clone: func -> This {
-        c := new(def)
+        c := new(name, pos)
         c pos set!(pos)
         c
     }
 
-}
-
-TileObject: class extends EditorObject {
-
-    TILE_COLOR := static Color new(160, 160, 0)
-
-    sprite: GlSprite
-    def: TileDef
-
-    init: func (=def) {
-        super()
-
-        sprite = GlSprite new(def image)
-        group add(sprite)
-
-        rect := GlRectangle new()
-        rect size set!(sprite size)
-        rect color = TILE_COLOR
-        rect filled = false
-        rect lineWidth = 2.0
-        outlineGroup add(rect)
-    }
-
-    contains?: func (hand: Vec2) -> Bool {
-        contains?(sprite size, hand)
-    }
-
-    snap!: func (gridSize: Int) {
-        snap!(sprite size, gridSize)
-    }
-
-    clone: func -> This {
-        c := new(def)
-        c pos set!(pos)
-        c
+    getFamily: func -> String {
+        "prop"
     }
 
 }

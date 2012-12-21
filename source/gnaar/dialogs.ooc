@@ -1,9 +1,12 @@
 
-import gnaar/ui
+use dye
+import dye/[core, input, sprite, font, primitives, math]
+
+import gnaar/[ui, utils]
 
 Dialog: class {
 
-    ui: UI
+    ui: GnUI
     input: Input
     group: GlGroup
     color := Color new(15, 15, 15)
@@ -48,12 +51,12 @@ InputDialog: class extends Dialog {
         rect color = color lighten(0.1)
         group add(rect)
 
-        promptText = GlText new(UI fontPath, "> " + prompt)
+        promptText = GlText new(GnUI fontPath, "> " + prompt)
         promptText color = color lighten(0.1)
         promptText pos set!(- rect size x / 2 + 10, -10)
         group add(promptText)
 
-        text = GlText new(UI fontPath, "")
+        text = GlText new(GnUI fontPath, "")
         text color = color lighten(0.03)
         text pos set!(- rect size x / 2 + 10, 15)
         group add(text)

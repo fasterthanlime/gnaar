@@ -3,15 +3,18 @@
 import dye/[core, input, sprite, font, math, primitives]
 
 import math
-import structs/[ArrayList, Stack]
+import structs/[ArrayList, Stack, List]
 
 use deadlogger
 import deadlogger/[Log, Logger]
 
-// internal
-import gnaar/[utils, objects, dialogs]
+use sdl
+import sdl/[Core]
 
-UI: class extends LevelBase {
+// internal
+import gnaar/[utils, objects, dialogs, loader, saver]
+
+GnUI: class extends LevelBase {
 
     prevMousePos := vec2(0, 0)
 
@@ -47,10 +50,10 @@ UI: class extends LevelBase {
     dialogStack := Stack<Dialog> new()
 
     /* Layers */
-    bgLayer, hbgLayer, hLayer, sLayer: EditorLayer
-
     layers := ArrayList<EditorLayer> new()
     activeLayer: EditorLayer
+
+    factory: LayerFactory
 
     /* HUD */
     camPosText: GlText
@@ -58,10 +61,11 @@ UI: class extends LevelBase {
     activeLayerText: GlText
 
     /* Constructor */
-    init: func (=dye, globalInput: Input) {
-        Item loadDefinitions()
-        Tile loadDefinitions()
-        Prop loadDefinitions()
+    init: func (=dye, globalInput: Input, =factory) {
+        dye setClearColor(Color white())
+        dye setShowCursor(true)
+        SDL enableUnicode(true)
+        SDL enableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL)
 
         group = GlGroup new()
         dye add(group)
@@ -90,6 +94,7 @@ UI: class extends LevelBase {
     }
 
     reset: func {
+        clearLayers()
         initLayers()
     }
 
@@ -97,42 +102,14 @@ UI: class extends LevelBase {
         while (!layers empty?()) {
             layers get(0) destroy()
         }
-
-        hero = null
     }
 
     initLayers: func {
-        clearLayers()
+        if (layers empty?())
 
-        bgLayer = PropLayer new(this, "background")
-        layers add(bgLayer)
+        factory spawnLayers(this)
 
-        hbgLayer = PropLayer new(this, "house background")
-        layers add(hbgLayer)
-
-        grid := GlGrid new()
-        grid width = gridSize
-        grid color set!(200, 200, 200)
-        layerGroup add(grid)
-
-        cross := GlCross new()
-        layerGroup add(cross)
-
-        hLayer = TileLayer new(this, "house")
-        layers add(hLayer)
-
-        sLayer = ItemLayer new(this, "sprites")
-        layers add(sLayer)
-
-        hero = HeroObject new()
-        hero pos set!(0, 0)
-        sLayer add(hero)
-
-        setActiveLayer(sLayer)
-    }
-
-    setHeroPos: func (pos: Vec2) {
-        hero pos set!(pos)
+        setActiveLayer(0)
     }
 
     initHud: func {
@@ -145,9 +122,9 @@ UI: class extends LevelBase {
         mousePosText pos add!(300, 0)
         hudGroup add(mousePosText)
 
-        activeLayerText = GlText new(fontPath, "active layer: sprites")
+        activeLayerText = GlText new(fontPath, "active layer: <unknown>")
         activeLayerText color set!(Color black())
-        activeLayerText pos set!(100, dye height - 100)
+        activeLayerText pos set!(30, dye height - 30)
         hudGroup add(activeLayerText)
     }
 
@@ -223,11 +200,16 @@ UI: class extends LevelBase {
         prevMousePos set!(mousePos)
     }
 
-    setActiveLayer: func (layer: EditorLayer) {
+    setActiveLayer: func (index: Int) {
+        if (index < 0 || index >= layers size) {
+            logger warn("No such layer: %d" format(index))
+            return
+        }
+
         if (activeLayer) {
             activeLayer clearSelection()
         }
-        activeLayer = layer
+        activeLayer = getLayer(index)
         activeLayerText value = "active layer: %s" format(activeLayer name)
     }
 
@@ -263,13 +245,25 @@ UI: class extends LevelBase {
                 case Keys BACKSPACE || Keys DEL =>
                     if (activeLayer) activeLayer deleteSelected()
                 case Keys _1 =>
-                    setActiveLayer(bgLayer)
+                    setActiveLayer(0)
                 case Keys _2 =>
-                    setActiveLayer(hbgLayer)
+                    setActiveLayer(1)
                 case Keys _3 =>
-                    setActiveLayer(hLayer)
+                    setActiveLayer(2)
                 case Keys _4 =>
-                    setActiveLayer(sLayer)
+                    setActiveLayer(3)
+                case Keys _5 =>
+                    setActiveLayer(4)
+                case Keys _6 =>
+                    setActiveLayer(5)
+                case Keys _7 =>
+                    setActiveLayer(6)
+                case Keys _8 =>
+                    setActiveLayer(7)
+                case Keys _9 =>
+                    setActiveLayer(8)
+                case Keys _0 =>
+                    setActiveLayer(9)
             }
         )
 
@@ -305,20 +299,28 @@ UI: class extends LevelBase {
     screenSize: func -> Vec2 {
         vec2(dye width, dye height)
     }
+    
+    addLayer: func (layer: EditorLayer) {
+        layers add(layer)
+    }
+
+    getLayer: func (index: Int) -> EditorLayer {
+        layers get(index)
+    }
+
+    getLayerByName: func (name: String) -> EditorLayer {
+        for (layer in layers) {
+            if (layer name == name) {
+                return layer
+            }
+        }
+        null
+    }
 
     /* Coordinate */
 
     toWorld: func (mouseCoords: Vec2) -> Vec2 {
         mouseCoords sub(screenSize() mul(0.5)) add(camPos)
-    }
-
-    getLayer: func (key: String) -> LayerBase {
-        match key {
-            case "bg" => bgLayer
-            case "hbg" => hbgLayer
-            case "h" => hLayer
-            case "s" => sLayer
-        }
     }
 }
 

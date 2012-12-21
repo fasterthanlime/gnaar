@@ -138,6 +138,25 @@ extend DocumentNode {
 
 }
 
+extend String {
+
+    toScalar: func -> ScalarNode {
+        ScalarNode new(this)
+    }
+
+}
+
+extend Vec2 {
+
+    toSeq: func -> SequenceNode {
+        seq := SequenceNode new()
+        seq add(ScalarNode new(x toString()))
+        seq add(ScalarNode new(y toString()))
+        seq
+    }
+
+}
+
 isPrintable: func (u: UInt16) -> Bool {
     /* ASCII 32 = ' ', ASCII 126 = '~' */
     (u >= 32 && u <= 126)

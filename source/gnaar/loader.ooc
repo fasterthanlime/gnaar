@@ -1,6 +1,5 @@
 
-import gnaar/[objects]
-
+/* libs */
 import structs/ArrayList
 
 import dye/[core, math]
@@ -10,6 +9,10 @@ import yaml/[Parser, Document]
 
 use deadlogger
 import deadlogger/[Log, Logger]
+
+/* internal */
+use gnaar
+import gnaar/[objects, utils]
 
 LevelLoader: class {
 
@@ -57,25 +60,21 @@ LevelLoader: class {
         }
 
         list := d toList()
-        layer := level getLayer(key)
+        layer := level getLayerByName(key)
         
         list each(|o|
             parseObject(layer, o) 
         )
     }
 
-    parseObject: func (l: LayerBase, d: DocumentNode) {
-        map := d toMap()
+    parseObject: func (layer: LayerBase, node: DocumentNode) {
+        map := node toMap()
 
-        type := map get("type") toScalar()
+        family := map get("family") toScalar()
         name := map get("name") toScalar()
         pos := map get("pos") toVec2()
 
-        match type {
-            case "prop" => l spawnProp(name, pos)
-            case "item" => l spawnItem(name, pos)
-            case "tile" => l spawnTile(name, pos)
-        }
+        layer spawn(family, name, pos)
     }
 
 }
