@@ -15,7 +15,7 @@ use deadlogger
 import deadlogger/[Log, Logger]
 
 /* internal */
-import gnaar/[ui, loader, saver, dialogs]
+import gnaar/[ui, loader, saver, dialogs, utils]
 
 InvalidInputException: class extends Exception {
     
@@ -389,8 +389,7 @@ EditorObject: abstract class extends GnObject {
     }
     
     snap!: func ~rect (size: Vec2, gridSize: Int) {
-        halfSize := vec2(size x * 0.5, - size y * 0.5)
-        pos set!(pos sub(halfSize) snap(gridSize) add(halfSize))
+        pos set!(pos snap(size, gridSize))
     }
 
 }

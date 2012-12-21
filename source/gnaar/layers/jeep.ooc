@@ -39,7 +39,12 @@ JeepFactory: class extends ObjectFactory {
 
 JeepLayer: class extends EditorLayer {
 
+    gridSize := 32
+
+    current := vec2i(0, 0)
+
     grid := SparseGrid new()
+    currentName := "<none>"
 
     init: func (.ui, .name) {
         super(ui, name)
@@ -49,8 +54,61 @@ JeepLayer: class extends EditorLayer {
 
     insert: func {
         ui push(InputDialog new(ui, "Enter jeep name", |name|
-            spawn("jeep", name, ui handPos())
+            currentName = name
         ))
+    }
+
+    insertAt: func (pos: Vec2, posi: Vec2i) {
+        item := grid get(posi x, posi y)
+        if (!item) {
+            //"Spawning an item at (%d, %d), ie. pos %s" printfln(posi x, posi y, pos _)
+            spawn("jeep", currentName, pos)
+        } else {
+            //"Already got an item at (%d, %d)" printfln(item col, item row)
+        }
+    }
+
+    removeAt: func (pos: Vec2, posi: Vec2i) {
+        item := grid get(posi x, posi y)
+        if (item) {
+            remove(item)
+        }
+    }
+
+    click: func {
+        pos := ui handPos() snap(vec2(gridSize, gridSize), gridSize)
+        posi := pos getColRow(gridSize)
+
+        if (ui input isPressed(Keys SHIFT)) {
+            removeAt(pos, posi)
+        } else {
+            insertAt(pos, posi)
+        }
+    }
+
+    dragStart: func (handStart: Vec2) {
+        pos := ui handPos() snap(vec2(gridSize, gridSize), gridSize)
+        current = pos getColRow(gridSize)
+
+        drag(vec2(0, 0))
+    }
+
+    drag: func (delta: Vec2) {
+        pos := ui handPos() snap(vec2(gridSize, gridSize), gridSize)
+        posi := pos getColRow(gridSize)
+
+        if (posi equals(current)) return
+
+        if (ui input isPressed(Keys SHIFT)) {
+            removeAt(pos, posi)
+        } else {
+            insertAt(pos, posi)
+        }
+
+        current set!(posi)
+    }
+
+    dragEnd: func {
     }
 
     add: func (object: EditorObject) -> EditorObject {
@@ -58,7 +116,7 @@ JeepLayer: class extends EditorLayer {
             case jo: JeepObject =>
                 object layer = this
                 group add(object group)
-                grid put(jo row, jo col, jo)
+                grid put(jo col, jo row, jo)
                 object
             case =>
                 logger warn("Can not add %s to %s" format(object class name, This name))
@@ -71,7 +129,7 @@ JeepLayer: class extends EditorLayer {
             case jo: JeepObject =>
                 object layer = null
                 group remove(object group)
-                grid remove(jo row, jo col)
+                grid remove(jo col, jo row)
                 object
             case =>
                 logger warn("Can not add %s to %s" format(object class name, This name))
@@ -142,6 +200,7 @@ SparseGrid: class {
     rows := HashMap<Int, Row> new()
 
     put: func (col, row: Int, obj: JeepObject) -> JeepObject {
+        //"Added object in grid at (%d, %d)" printfln(col, row)
         getRow(row) put(col, obj)
     }
 
@@ -197,8 +256,8 @@ JeepObject: class extends EditorObject {
 
     sprite: GlGridSprite
 
-    col: Int { get { pos x / side } }
-    row: Int { get { pos y / side } }
+    col: Int { get { ceil(- 0.5 + (pos x / side as Float)) } }
+    row: Int { get { ceil(- 0.5 + (pos y / side as Float)) } }
 
     init: func (=def, initPos: Vec2) {
         super("jeep", def name, initPos)
@@ -206,6 +265,10 @@ JeepObject: class extends EditorObject {
         path := def images get(0)
         sprite = GlGridSprite new(path, 4, 4)
         group add(sprite)
+
+        snap!(sprite size, side)
+        //"Sprite size = %s, snapped to %s" printfln(sprite size _, pos _)
+        group pos set!(pos)
     }
 
     contains?: func (hand: Vec2) -> Bool {
