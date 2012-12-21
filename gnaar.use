@@ -1,0 +1,4 @@
+Name: gnaar
+Description: reusable level editor
+Requires: dye, sdl, glew, chipmunk, yaml
+SourcePath: source
