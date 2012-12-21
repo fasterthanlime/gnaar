@@ -14,8 +14,11 @@ import structs/[ArrayList, Stack, HashMap, List]
 use deadlogger
 import deadlogger/[Log, Logger]
 
+use yaml
+import yaml/[Parser, Document]
+
 /* internal */
-import gnaar/[ui, loader, saver, dialogs, objects]
+import gnaar/[ui, loader, saver, dialogs, objects, utils]
 
 JeepFactory: class extends ObjectFactory {
 
@@ -24,7 +27,12 @@ JeepFactory: class extends ObjectFactory {
     }
 
     spawn: func (name: String, pos: Vec2) -> GnObject {
-        layer add(JeepObject new(name, pos))
+        def := JeepDefinition load(name)
+        if (def) {
+            layer add(JeepObject new(def, pos))
+        } else {
+            logger warn("Jeep not found: %s" format(name))
+        }
     }
 
 }
@@ -50,22 +58,50 @@ JeepDefinition: class {
     name: String
     images := ArrayList<String> new()
 
+    logger := static Log getLogger(This name)
+
+    init: func (=name) {
+    }
+
+    cache := static HashMap<String, JeepDefinition> new()
+
+    load: static func (name: String) -> JeepDefinition {
+        if (cache contains?(name)) {
+            return cache get(name)
+        }
+
+        path := "assets/jeeps/%s.yml" format(name)
+        doc := parseYaml(path)
+        if (!doc) {
+            logger warn("File not found: %s" format(path))
+            return null
+        }
+
+        map := doc toMap()
+        
+        def := This new(name)
+        images := map get("images") toList()
+        for (image in images) {
+            def images add(image toString())
+        }
+        cache put(name, def)
+        def
+    }
+
 }
 
 JeepObject: class extends ImageObject {
 
-    init: func (=name, initPos: Vec2) {
-        super("prop", name, "assets/png/%.png" format(name))
+    def: JeepDefinition
+
+    init: func (=def, initPos: Vec2) {
+        super("jeep", def name, def images get(0))
     }
 
     clone: func -> This {
-        c := new(name, pos)
+        c := new(def, pos)
         c pos set!(pos)
         c
-    }
-
-    getFamily: func -> String {
-        "jeep"
     }
 
 }

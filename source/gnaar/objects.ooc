@@ -55,6 +55,8 @@ ObjectFactory: abstract class {
     layer: EditorLayer
     family: String
 
+    logger := static Log getLogger(This name)
+
     init: func (=layer, =family)
 
     spawn: abstract func (name: String, pos: Vec2) -> GnObject
@@ -338,7 +340,6 @@ EditorObject: abstract class extends GnObject {
         pos set!(pos sub(halfSize) snap(gridSize) add(halfSize))
     }
 
-    getFamily: abstract func -> String
 }
 
 ImageObject: abstract class extends EditorObject {

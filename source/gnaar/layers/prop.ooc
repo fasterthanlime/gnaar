@@ -15,7 +15,7 @@ use deadlogger
 import deadlogger/[Log, Logger]
 
 /* internal */
-import gnaar/[ui, loader, saver, dialogs, objects]
+import gnaar/[ui, loader, saver, dialogs, objects, utils]
 
 PropFactory: class extends ObjectFactory {
 
@@ -39,10 +39,6 @@ PropObject: class extends ImageObject {
         c := new(name, pos)
         c pos set!(pos)
         c
-    }
-
-    getFamily: func -> String {
-        "prop"
     }
 
 }
