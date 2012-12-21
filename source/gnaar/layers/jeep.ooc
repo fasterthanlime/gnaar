@@ -61,10 +61,10 @@ JeepLayer: class extends EditorLayer {
     insertAt: func (pos: Vec2, posi: Vec2i) {
         item := grid get(posi x, posi y)
         if (!item) {
-            //"Spawning an item at (%d, %d), ie. pos %s" printfln(posi x, posi y, pos _)
             spawn("jeep", currentName, pos)
-        } else {
-            //"Already got an item at (%d, %d)" printfln(item col, item row)
+        } else if (item def name != currentName) {
+            remove(item)
+            spawn("jeep", currentName, pos)
         }
     }
 
@@ -76,6 +76,10 @@ JeepLayer: class extends EditorLayer {
     }
 
     click: func {
+        if (currentName == "<none>") {
+            insert()
+        }
+
         pos := ui handPos() snap(vec2(gridSize, gridSize), gridSize)
         posi := pos getColRow(gridSize)
 
@@ -112,7 +116,6 @@ JeepLayer: class extends EditorLayer {
     }
 
     notifyNeighbors: func (col, row: Int) {
-        grid notify(col, row)
         grid notify(col - 1, row)
         grid notify(col + 1, row)
         grid notify(col, row - 1)
@@ -126,6 +129,7 @@ JeepLayer: class extends EditorLayer {
                 group add(object group)
                 grid put(jo col, jo row, jo)
                 notifyNeighbors(jo col, jo row)
+                grid notify(jo col, jo row)
 
                 object
             case =>
@@ -137,14 +141,14 @@ JeepLayer: class extends EditorLayer {
     remove: func (object: EditorObject) {
         match (object) {
             case jo: JeepObject =>
-                object layer = null
-                group remove(object group)
                 grid remove(jo col, jo row)
                 notifyNeighbors(jo col, jo row)
+                group remove(object group)
+                object layer = null
 
                 object
             case =>
-                logger warn("Can not add %s to %s" format(object class name, This name))
+                logger warn("Can not remove %s from %s" format(object class name, This name))
                 null
         }
     }
@@ -212,7 +216,6 @@ SparseGrid: class {
     rows := HashMap<Int, Row> new()
 
     put: func (col, row: Int, obj: JeepObject) -> JeepObject {
-        //"Added object in grid at (%d, %d)" printfln(col, row)
         getRow(row) put(col, obj)
     }
 
@@ -261,7 +264,10 @@ Row: class {
 
     remove: func (col: Int) -> JeepObject {
         obj := cols get(col)
-        cols remove(col)
+        if (obj) {
+            cols remove(col)
+            obj
+        }
         obj
     }
 
@@ -299,7 +305,6 @@ JeepObject: class extends EditorObject {
     }
 
     notify: func (grid: SparseGrid) {
-        //"%s being notified" printfln(posi _)
 
         top    = (grid get(posi x, posi y - 1) != null)
         bottom = (grid get(posi x, posi y + 1) != null)
