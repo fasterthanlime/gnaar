@@ -1,6 +1,7 @@
 
 /* libs */
 import structs/ArrayList
+import io/File
 
 import dye/[core, math]
 
@@ -21,6 +22,8 @@ LevelLoader: class {
     name: String
     level: LevelBase
 
+    success := false
+
     init: func (=name, =level) {
         level reset()
 
@@ -31,6 +34,12 @@ LevelLoader: class {
         parser := YAMLParser new()
         path := "assets/levels/%s.yml" format(name)
         logger info("Loading level %s" format(path))
+
+        f := File new(path)
+        if (!f exists?()) {
+            logger warn("File %s not found, can't load level" format(path))
+            return
+        }
         parser setInputFile(path)
 
         doc := Document new()
@@ -43,6 +52,8 @@ LevelLoader: class {
                     parseLayers(v)
             }
         )
+
+        success = true
     }
 
     parseLayers: func (d: DocumentNode) {

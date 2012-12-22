@@ -220,7 +220,10 @@ GnUI: class extends LevelBase {
                     running = false
                 case Keys F1 =>
                     push(InputDialog new(this, "Enter level path to load", |name|
-                        LevelLoader new(name, this)
+                        loader := LevelLoader new(name, this)
+                        if (!loader success) {
+                            push(AlertDialog new(this, "Could not load level %s" format(name)))
+                        }
                     ))
                 case Keys F2 =>
                     push(InputDialog new(this, "Enter level path to save", |name|
