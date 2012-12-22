@@ -345,6 +345,10 @@ GnObject: abstract class {
         // by default, no property besides family or name
     }
 
+    destroy: func {
+        // by default, nothing to do
+    }
+
 }
 
 EditorObject: abstract class extends GnObject {
