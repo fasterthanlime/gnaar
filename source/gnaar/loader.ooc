@@ -61,6 +61,10 @@ LevelLoader: class {
 
         list := d toList()
         layer := level getLayerByName(key)
+        if (!layer) {
+            logger warn("Unknown layer %s in level file" format(key))
+            return
+        }
         
         list each(|o|
             parseObject(layer, o) 
