@@ -8,7 +8,7 @@ import sdl/[Core]
 use yaml
 import yaml/[Document]
 
-import math
+import math, math/Random
 import structs/[ArrayList, Stack, HashMap, List]
 
 use deadlogger
@@ -299,7 +299,7 @@ JeepObject: class extends EditorObject {
     init: func (=def, initPos: Vec2) {
         super("jeep", def name, initPos)
 
-        path := def images get(0)
+        path := Random choice(def images)
         sprite = GlGridSprite new(path, 4, 4)
         group add(sprite)
 

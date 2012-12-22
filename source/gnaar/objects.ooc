@@ -97,6 +97,22 @@ EditorLayer: abstract class extends LayerBase {
 
     }
 
+    left: func {
+
+    }
+
+    right: func {
+
+    }
+
+    up: func {
+
+    }
+
+    down: func {
+
+    }
+
     drag: func (delta: Vec2) {
 
     }

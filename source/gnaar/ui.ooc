@@ -265,6 +265,22 @@ GnUI: class extends LevelBase {
                     setActiveLayer(8)
                 case Keys _0 =>
                     setActiveLayer(9)
+                case Keys LEFT =>
+                    if (activeLayer) {
+                        activeLayer left()
+                    }
+                case Keys RIGHT =>
+                    if (activeLayer) {
+                        activeLayer right()
+                    }
+                case Keys UP =>
+                    if (activeLayer) {
+                        activeLayer up()
+                    }
+                case Keys DOWN =>
+                    if (activeLayer) {
+                        activeLayer down()
+                    }
             }
         )
 
@@ -325,3 +341,4 @@ GnUI: class extends LevelBase {
     }
 }
 
+                

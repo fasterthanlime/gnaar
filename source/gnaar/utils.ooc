@@ -146,6 +146,14 @@ extend String {
 
 }
 
+extend Int {
+
+    toScalar: func -> ScalarNode {
+        ScalarNode new(this toString())
+    }
+
+}
+
 extend Bool {
 
     toScalar: func -> ScalarNode {
