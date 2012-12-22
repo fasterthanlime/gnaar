@@ -36,9 +36,7 @@ PropObject: class extends ImageObject {
     }
 
     clone: func -> This {
-        c := new(name, pos)
-        c pos set!(pos)
-        c
+        new(name, pos)
     }
 
 }

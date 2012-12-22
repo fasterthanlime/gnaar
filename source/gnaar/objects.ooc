@@ -149,6 +149,8 @@ DragLayer: class extends EditorLayer {
     objects := ArrayList<EditorObject> new()
     selectedObjects := ArrayList<EditorObject> new()
 
+    gridSize := 32
+
     init: func (.ui, .name) {
         super(ui, name)
     }
@@ -310,7 +312,7 @@ DragLayer: class extends EditorLayer {
         // CTRL = precise dragging
         if (!ui input isPressed(Keys CTRL)) {
             for (o in selectedObjects) {
-                o snap!(ui gridSize)
+                o snap!(gridSize)
             }
         }
     }

@@ -94,6 +94,11 @@ JeepLayer: class extends EditorLayer {
         pos := ui handPos() snap(vec2(gridSize, gridSize), gridSize)
         current = pos getColRow(gridSize)
 
+        block := grid get(current x, current y)
+        if (block) {
+            currentName = block def name
+        }
+
         drag(vec2(0, 0))
     }
 
@@ -355,9 +360,7 @@ JeepObject: class extends EditorObject {
     }
 
     clone: func -> This {
-        c := new(def, pos)
-        c pos set!(pos)
-        c
+        new(def, pos)
     }
 
     load: func (map: HashMap<String, DocumentNode>) {

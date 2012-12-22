@@ -170,28 +170,6 @@ isPrintable: func (u: UInt16) -> Bool {
     (u >= 32 && u <= 126)
 }
 
-extend GlAnimSet {
-
-    load: func (characterName: String, part: String, animationName: String, numFrames: Int) -> GlAnim {
-        numString: String
-
-        if (numFrames < 100) {
-            numString = "%02d"
-        } else if (numFrames < 1000) {
-            numString = "%03d"
-        } else {
-            Exception new("Too many animation frames!") throw()
-        }
-
-        formatString := "assets/png/%s/%s/%s/%s-%s.png" format(characterName, part, animationName, characterName, numString)
-
-        anim := GlAnim sequence(formatString, 1, numFrames)
-        put(animationName, anim)
-        anim
-    }
-
-}
-
 /* List .yml files in a directory, with the '.yml' extension stripped */
 
 listDefs: func (path: String) -> List<String> {

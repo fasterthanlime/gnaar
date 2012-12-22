@@ -32,8 +32,6 @@ GnUI: class extends LevelBase {
     dragThreshold := 2.0
     dragPath := vec(0, 0)
 
-    gridSize := 32.0
-
     /* Camera */
     camPos := vec2(0, 0)
     draggingCam := false
