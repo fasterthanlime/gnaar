@@ -1,9 +1,7 @@
 
 /* libs */
+use dye
 import dye/[core, input, sprite, font, math, primitives]
-
-use sdl
-import sdl/[Core]
 
 use yaml
 import yaml/[Document]

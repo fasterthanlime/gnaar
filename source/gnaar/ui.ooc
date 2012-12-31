@@ -1,5 +1,6 @@
 
 // libs
+use dye
 import dye/[core, input, sprite, font, math, primitives]
 
 import math
@@ -8,8 +9,8 @@ import structs/[ArrayList, Stack, List]
 use deadlogger
 import deadlogger/[Log, Logger]
 
-use sdl
-import sdl/[Core]
+use sdl2
+import sdl2/[Core, Event]
 
 // internal
 import gnaar/[utils, objects, dialogs, loader, saver]
@@ -62,8 +63,6 @@ GnUI: class extends LevelBase {
     init: func (=dye, globalInput: Input, =factory) {
         dye setClearColor(Color white())
         dye setShowCursor(true)
-        SDL enableUnicode(true)
-        SDL enableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL)
 
         group = GlGroup new()
         dye add(group)

@@ -78,8 +78,8 @@ InputDialog: class extends Dialog {
                 if (text value size > 0) {
                     text value = text value[0..-2]
                 }
-            } else if (isPrintable(kev unicode)) {
-                text value = "%s%c" format(text value, kev unicode as Char)
+            } else if (isPrintable(kev scancode)) {
+                text value = "%s%c" format(text value, kev scancode as Char)
             }
         )
         initialized = true
