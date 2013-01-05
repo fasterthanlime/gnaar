@@ -214,7 +214,7 @@ GnUI: class extends LevelBase {
         input onKeyPress(|kev|
             if (!root?) return
 
-            match (kev code) {
+            match (kev scancode) {
                 case Keys ESC =>
                     running = false
                 case Keys F1 =>

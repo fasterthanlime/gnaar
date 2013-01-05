@@ -69,17 +69,20 @@ InputDialog: class extends Dialog {
 
         cb := this cb // silly workaround..
         input onKeyPress(|kev|
-            if (kev code == Keys ESC) {
-                destroy()
-            } if (kev code == Keys ENTER) {
-                destroy()
-                cb(text value)
-            } else if (kev code == Keys BACKSPACE) {
-                if (text value size > 0) {
-                    text value = text value[0..-2]
-                }
-            } else if (isPrintable(kev scancode)) {
-                text value = "%s%c" format(text value, kev scancode as Char)
+            match (kev scancode) {
+                case Keys ESC =>
+                    destroy()
+                case Keys ENTER =>
+                    destroy()
+                    cb(text value)
+                case Keys BACKSPACE =>
+                    if (text value size > 0) {
+                        text value = text value[0..-2]
+                    }
+                case =>
+                    if (isPrintable(kev keycode)) {
+                        text value = "%s%c" format(text value, kev keycode as Char)
+                    }
             }
         )
         initialized = true
