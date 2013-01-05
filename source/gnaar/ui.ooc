@@ -210,13 +210,22 @@ GnUI: class extends LevelBase {
         activeLayerText value = "active layer: %s" format(activeLayer name)
     }
 
+    closeEditor: func {
+        // TODO: ask if dirty level should be saved
+        running = false
+    }
+
     initEvents: func {
+        input onExit(||
+            closeEditor()
+        )
+
         input onKeyPress(|kev|
             if (!root?) return
 
             match (kev scancode) {
                 case Keys ESC =>
-                    running = false
+                    closeEditor()
                 case Keys F1 =>
                     push(InputDialog new(this, "Enter level path to load", |name|
                         loader := LevelLoader new(name, this)
