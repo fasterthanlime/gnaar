@@ -1,4 +1,4 @@
 Name: gnaar
 Description: reusable level editor
-Requires: dye, sdl2, glew, chipmunk, yaml
+Requires: dye, sdl2, glew, chipmunk, yaml, deadlogger
 SourcePath: source
