@@ -37,7 +37,7 @@ JeepFactory: class extends ObjectFactory {
 
 JeepLayer: class extends EditorLayer {
 
-    gridSize := 32
+    gridSize := 64
 
     current := vec2i(0, 0)
 
@@ -278,7 +278,7 @@ Row: class {
 
 JeepObject: class extends EditorObject {
 
-    side := 32
+    side := 64
 
     def: JeepDefinition
 
@@ -301,10 +301,17 @@ JeepObject: class extends EditorObject {
         sprite = GlGridSprite new(path, 4, 4)
         group add(sprite)
 
-        snap!(sprite size, side)
-        posi = pos getColRow(side)
+        updatePos()
+    }
 
+    updatePos: func {
+        snap!(vec2(side, side), side)
+        updatePosi()
         group pos set!(pos)
+    }
+
+    updatePosi: func {
+        posi = pos getColRow(side)
     }
 
     notify: func (grid: SparseGrid) {
@@ -350,11 +357,11 @@ JeepObject: class extends EditorObject {
     }
 
     contains?: func (hand: Vec2) -> Bool {
-        contains?(sprite size, hand)
+        false
     }
 
     snap!: func (gridSize: Int) {
-        snap!(sprite size, gridSize)
+        // fuck off
     }
 
     clone: func -> This {
