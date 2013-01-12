@@ -1,18 +1,19 @@
 
-/* libs */
+// third-party stuff
 use dye
 import dye/[core, input, sprite, font, math, primitives]
 
 use yaml
 import yaml/[Document]
 
-import math
-import structs/[ArrayList, Stack, HashMap, List]
-
 use deadlogger
 import deadlogger/[Log, Logger]
 
-/* internal */
+// sdk stuff
+import math
+import structs/[ArrayList, Stack, HashMap, List]
+
+/* our stuff */
 import gnaar/[ui, loader, saver, dialogs, utils]
 
 InvalidInputException: class extends Exception {
@@ -345,6 +346,14 @@ GnObject: abstract class {
 
     destroy: func {
         // by default, nothing to do
+    }
+
+    preUpdate: func {
+    }
+
+    // return false to destroy
+    update: func -> Bool {
+        true
     }
 
 }
