@@ -387,17 +387,7 @@ EditorObject: abstract class extends GnObject {
     }
 
     contains?: func ~rect (size, hand: Vec2) -> Bool {
-        left  :=  pos x - size x * 0.5
-        right :=  pos x + size x * 0.5
-        top    := pos y - size y * 0.5
-        bottom := pos y + size y * 0.5
-
-        if (hand x < left) return false
-        if (hand x > right) return false
-        if (hand y < top) return false
-        if (hand y > bottom) return false
-
-        true
+        BoundingBox contains?(pos, size, hand)
     }
 
     update: func {
