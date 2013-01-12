@@ -19,3 +19,5 @@ deck-editor:
 clean:
 	rock -x
 
+.PHONY: deck-editor clean
+

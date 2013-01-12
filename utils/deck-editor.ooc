@@ -29,9 +29,20 @@ App: class {
     dye: DyeContext
     running := true
 
+    deck: Deck
+
     init: func (config: ZombieConfig) {
         dye = DyeContext new(1920, 1080, "Deck Editor [Gnaar]", false, 1280, 720)
         dye setClearColor(Color white())
+
+        file := config["file"]
+        if (!file) {
+            "Usage: deck-editor file=FILE" println()
+            running = false
+        }
+        deck = Deck new(file)
+        deck group pos set!(dye center)
+        dye add(deck group)
 
         setupEvents()
     }
@@ -44,7 +55,8 @@ App: class {
 
     run: func {
         while (running) {
-            SDL delay(10)
+            SDL delay(16)
+            deck update()
 
             dye input _poll()
             dye render()
