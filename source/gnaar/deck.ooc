@@ -17,8 +17,9 @@ import gnaar/[objects, utils]
 Deck: class extends GnObject {
 
     group: GlAnimSet { get set }
+    path: String
 
-    init: func (path: String) {
+    init: func (=path) {
         group = GlAnimSet new()
 
         doc := parseYaml(path)
@@ -30,7 +31,7 @@ Deck: class extends GnObject {
         map each(|k, v|
             group put(k, loadAnim(k, v))
         )
-        group play("idle") // default, do what you want cause a pirate is free.
+        play("idle") // default, do what you want cause a pirate is free.
     }
 
     loadAnim: func (name: String, node: DocumentNode) -> GlAnim {
@@ -51,12 +52,16 @@ Deck: class extends GnObject {
         )
 
         if (!source) {
-            Exception new("Missing source for animation")
+            Exception new("Missing source for animation %s in file %s") throw()
         }
         grid := GlGridSprite new(source, numFrames, numRows)
         anim := GlAnim new(grid)
         anim frameDuration = frameDuration
         anim
+    }
+
+    play: func (name: String) {
+        group play(name)
     }
 
     update: func -> Bool {
