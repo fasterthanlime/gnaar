@@ -1,7 +1,7 @@
 
 // third-party libs
 use dye
-import dye/[core, input, math]
+import dye/[core, input, math, font]
 
 use gnaar
 import gnaar/[deck]
@@ -20,6 +20,7 @@ import io/File
 main: func (cmd: ArrayList<String>) {
     config := ZombieConfig new("config/deckedit.conf", |base|
         base("home", ".")
+        base("font", "assets/ttf/font.ttf")
     )
     args := config handleCommandLine(cmd)
 
@@ -32,13 +33,22 @@ App: class {
     dye: DyeContext
     running := true
 
+    paused := false
+
     group: GlGroup
     deck: Deck
 
-    file, anim: String
-    home: String
+    frameLabel: GlText
 
-    init: func (config: ZombieConfig, args: ArrayList<String>) {
+    file, anim: String
+
+    config: ZombieConfig
+    home, font: String
+
+    init: func (=config, args: ArrayList<String>) {
+        home = config["home"]
+        font = config["font"]
+
         dye = DyeContext new(1280, 720, "Deck Editor [Gnaar]", false, 1280, 720)
         dye setClearColor(Color white())
 
@@ -46,7 +56,10 @@ App: class {
         group pos set!(dye center)
         dye add(group)
 
-        home = config["home"]
+        frameLabel = GlText new(font, "Frame: ?", 28)
+        frameLabel color set!(0, 0, 0)
+        frameLabel pos set!(30, 30)
+        dye add(frameLabel)
 
         if (args empty?()) {
             "Usage: deck-editor FILE [ANIM]" println()
@@ -77,6 +90,12 @@ App: class {
                     running = false
                 case Keys F5 =>
                     reload()
+                case Keys SPACE =>
+                    paused = !paused
+                case Keys LEFT =>
+                    deck frameOffset(-1)
+                case Keys RIGHT =>
+                    deck frameOffset(1)
             }
         )
     }
@@ -97,7 +116,10 @@ App: class {
     run: func {
         while (running) {
             SDL delay(16)
-            deck update()
+            if (!paused) {
+                deck update()
+            }
+            frameLabel value = "Frame: %d" format(deck currentFrame())
 
             dye input _poll()
             dye render()

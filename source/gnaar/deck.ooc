@@ -70,5 +70,13 @@ Deck: class extends GnObject {
         true
     }
 
+    currentFrame: func -> Int {
+        group currentFrame()
+    }
+
+    frameOffset: func (offset: Int) {
+        group frameOffset(offset)
+    }
+
 }
 
