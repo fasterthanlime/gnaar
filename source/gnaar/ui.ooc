@@ -68,7 +68,7 @@ Panel: class extends Widget {
         for (c in children) {
             logger info(" - (%.2f, %.2f)", x, y)
             c pos set!(x, y)
-            x += c size x
+            x += c size x + padding x
         }
 
         dirty = false
@@ -82,19 +82,20 @@ Panel: class extends Widget {
 
 Label: class extends Widget {
 
+    margin := vec2(5, 5)
     _text: GlText
 
     color := Color black()
 
     init: func (value: String) {
-        _text = GlText new(Frame fontPath, "")
+        _text = GlText new(Frame fontPath, value)
         _text pos set!(0, 0)
-        setValue(value)
+        repack()
     }
 
     setValue: func (value: String) {
         _text value = value
-        size set!(_text size)
+        repack()
         if (parent) {
             parent touch()
         }
@@ -105,8 +106,12 @@ Label: class extends Widget {
     }
 
     draw: func (dye: DyeContext) {
-        _text pos set!(pos)
+        _text pos set!(pos add(margin))
         _text draw(dye)
+    }
+
+    repack: func {
+        size set!(_text size add(margin))
     }
 
 }

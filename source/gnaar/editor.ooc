@@ -48,6 +48,7 @@ Editor: class extends LevelBase {
 
     init: func (dye: DyeContext, =factory) {
         frame = Frame new(dye)
+        frame padding set!(10, 10)
         input = frame input
 
         listener = EditorEventListener new(this)
