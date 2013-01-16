@@ -14,7 +14,7 @@ import math
 import structs/[ArrayList, Stack, HashMap, List]
 
 /* our stuff */
-import gnaar/[ui, loader, saver, dialogs, utils]
+import gnaar/[editor, loader, saver, dialogs, utils]
 
 InvalidInputException: class extends Exception {
     
@@ -45,7 +45,7 @@ LayerBase: abstract class {
 
 LayerFactory: abstract class {
 
-    spawnLayers: abstract func (ui: GnUI)
+    spawnLayers: abstract func (editor: Editor)
 
 }
 
@@ -70,11 +70,11 @@ EditorLayer: abstract class extends LayerBase {
     group: GlGroup
 
     logger: Logger
-    ui: GnUI
+    editor: Editor
 
-    init: func (=ui, =name) {
+    init: func (=editor, =name) {
         group = GlGroup new()
-        ui layerGroup add(group)
+        editor layerGroup add(group)
         logger = Log getLogger("layer: %s" format(name))
     }
 
@@ -89,6 +89,10 @@ EditorLayer: abstract class extends LayerBase {
     }
 
     dragStart: func (handStart: Vec2) {
+
+    }
+
+    drag: func (delta: Vec2) {
 
     }
 
@@ -109,10 +113,6 @@ EditorLayer: abstract class extends LayerBase {
     }
 
     down: func {
-
-    }
-
-    drag: func (delta: Vec2) {
 
     }
 
@@ -166,8 +166,8 @@ DragLayer: class extends EditorLayer {
 
     gridSize := 64
 
-    init: func (.ui, .name) {
-        super(ui, name)
+    init: func (.editor, .name) {
+        super(editor, name)
     }
 
     add: func (object: EditorObject) -> EditorObject {
@@ -193,8 +193,8 @@ DragLayer: class extends EditorLayer {
         while (!objects empty?()) {
             objects get(0) destroy()
         }
-        ui layerGroup remove(group)
-        ui layers remove(this)
+        editor layerGroup remove(group)
+        editor layers remove(this)
     }
 
     eachObject: func (f: Func(EditorObject)) {
@@ -213,7 +213,7 @@ DragLayer: class extends EditorLayer {
 
     click: func {
         // Shift = multi-selection
-        if (!ui input isPressed(Keys SHIFT)) {
+        if (!editor input isPressed(Keys SHIFT)) {
             clearSelection()
         }
 
@@ -223,7 +223,7 @@ DragLayer: class extends EditorLayer {
     singleSelect: func {
         o := singlePick()
         if (o) {
-            if (ui input isPressed(Keys SHIFT)) {
+            if (editor input isPressed(Keys SHIFT)) {
                 toggleSelect(o)
             } else {
                 select(o)
@@ -232,7 +232,7 @@ DragLayer: class extends EditorLayer {
     }
 
     singlePick: func -> EditorObject {
-        handPos := ui handPos()
+        handPos := editor handPos()
 
         for (o in objects) {
             if (o contains?(handPos)) {
@@ -276,9 +276,9 @@ DragLayer: class extends EditorLayer {
 
         for (o in selectedObjects) {
             ourDelta := delta
-            if(ui input isPressed(Keys X)) {
+            if(editor input isPressed(Keys X)) {
                 ourDelta y = 0
-            } else if (ui input isPressed(Keys Y)) {
+            } else if (editor input isPressed(Keys Y)) {
                 ourDelta x = 0
             }
 
@@ -308,7 +308,7 @@ DragLayer: class extends EditorLayer {
             }
         }
 
-        if (moving && ui input isPressed(Keys D)) {
+        if (moving && editor input isPressed(Keys D)) {
             old := ArrayList<EditorObject> new()
             old addAll(selectedObjects)
             clearSelection()
@@ -325,7 +325,7 @@ DragLayer: class extends EditorLayer {
         moving = false
 
         // CTRL = precise dragging
-        if (!ui input isPressed(Keys CTRL)) {
+        if (!editor input isPressed(Keys CTRL)) {
             for (o in selectedObjects) {
                 o snap!(gridSize)
             }

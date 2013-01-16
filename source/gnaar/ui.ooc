@@ -13,67 +13,83 @@ use sdl2
 import sdl2/[Core, Event]
 
 // internal
-import gnaar/[utils, objects, dialogs, loader, saver]
+import gnaar/[dialogs, events]
 
-GnUI: class extends LevelBase {
+Widget: class extends GlDrawable {
 
-    prevMousePos := vec2(0, 0)
+    pos := vec2(0, 0)
+    size := vec2(0, 0)
+
+    draw: func (dye: DyeContext) {
+        // override stuff here
+    }
+
+}
+
+Panel: class extends Widget {
+
+    children := ArrayList<Widget> new()
+
+    add: func (widget: Widget) {
+        children add(widget)
+    }
+
+}
+
+Label: class extends Widget {
+
+    _text: GlText
+
+    color := Color black()
+
+    init: func (value: String) {
+        _text = GlText new(Frame fontPath, value)
+    }
+
+    setValue: func (value: String) {
+        _text value = value
+    }
+
+    setValue: func ~var (value: String, args: ...) {
+        _text value = value format(args)
+    }
+
+}
+
+Frame: class extends Panel {
 
     fontPath := static "assets/ttf/font.ttf"
-    logger := static Log getLogger("editor-ui")
+    logger := static Log getLogger(This name)
 
     dye: DyeContext
     input: Input
 
-    running := true
+    queue := EventQueue new()
 
-    /* dragging */
+    // mouse stuff
+    prevMousePos := vec2(0, 0)
+    delta := vec2(0, 0)
+
+    // drag stuff
     dragging := false
     dragStart := false
     dragThreshold := 2.0
-    dragPath := vec(0, 0)
-
-    /* Camera */
-    camPos := vec2(0, 0)
-    draggingCam := false
-    camNudge := 128.0
+    dragPath := vec2(0, 0)
     
-    /* Dye groups */
-    group: GlGroup
-    worldGroup: GlGroup
-        layerGroup: GlGroup
+    // Dye groups
+    group: GlGroup { get set }
     hudGroup: GlGroup
     dialogGroup: GlGroup
     
-    /* Dialogs */
+    // Dialogs
     dialogStack := Stack<Dialog> new()
 
-    /* Layers */
-    layers := ArrayList<EditorLayer> new()
-    activeLayer: EditorLayer
-
-    factory: LayerFactory
-
-    /* HUD */
-    camPosText: GlText
-    mousePosText: GlText
-    activeLayerText: GlText
-
-    /* Constructor */
-    init: func (=dye, globalInput: Input, =factory) {
-        dye setClearColor(Color white())
-        dye setShowCursor(true)
+    // Constructor
+    init: func (=dye) {
+        input = dye input
+        size set!(dye width, dye height)
 
         group = GlGroup new()
-        dye add(group)
-
-        worldGroup = GlGroup new()
-        group add(worldGroup)
-
-        {
-            layerGroup = GlGroup new()
-            worldGroup add(layerGroup)
-        }
 
         hudGroup = GlGroup new()
         group add(hudGroup)
@@ -81,60 +97,8 @@ GnUI: class extends LevelBase {
         dialogGroup = GlGroup new()
         group add(dialogGroup)
 
-        input = globalInput sub()
-
         initEvents()
         prevMousePos set!(input getMousePos())
-
-        initHud()
-        initLayers()
-    }
-
-    reset: func {
-        clearLayers()
-        initLayers()
-    }
-
-    clearLayers: func {
-        while (!layers empty?()) {
-            layers get(0) destroy()
-        }
-    }
-
-    initLayers: func {
-        if (layers empty?())
-
-        factory spawnLayers(this)
-
-        setActiveLayer(0)
-    }
-
-    initHud: func {
-        camPosText = GlText new(fontPath, "camera pos")
-        camPosText color set!(Color black())
-        hudGroup add(camPosText)
-
-        mousePosText = GlText new(fontPath, "camera pos")
-        mousePosText color set!(Color black())
-        mousePosText pos add!(300, 0)
-        hudGroup add(mousePosText)
-
-        activeLayerText = GlText new(fontPath, "active layer: <unknown>")
-        activeLayerText color set!(Color black())
-        activeLayerText pos set!(30, dye height - 30)
-        hudGroup add(activeLayerText)
-    }
-
-    updateHud: func {
-        camPosText value = "camera pos: %s" format(camPos _)
-        mousePosText value = "mouse pos: %s" format(handPos() _)
-    }
-
-    handPos: func -> Vec2 {
-        toWorld(input getMousePos())
-    }
-
-    openDialog: func {
     }
 
     push: func (dialog: Dialog) {
@@ -151,32 +115,20 @@ GnUI: class extends LevelBase {
     update: func {
         updateMouse()
 
-        for (layer in layers) {
-            layer update()
-        }
-        updateCamera()
-        updateHud()
-
         if (!root?) {
             dialog := dialogStack peek()
             dialog update()
         }
-    }
 
-    updateCamera: func {
-        worldGroup pos set!(screenSize() mul(0.5) add(camPos mul(-1.0)))
+        queue dispatch()
     }
 
     updateMouse: func {
         mousePos := input getMousePos()
-        delta := mousePos sub(prevMousePos)
-        
-        if (draggingCam) {
-            camPos sub!(delta)
-        }
+        delta = mousePos sub(prevMousePos)
 
-        if (dragging && activeLayer) {
-            activeLayer drag(delta)
+        if (dragging) {
+            queue push(DragEvent new(delta))
         }
 
         if (dragStart) {
@@ -187,111 +139,15 @@ GnUI: class extends LevelBase {
                 dragStart = false
                 dragging = true
 
-                if (activeLayer) {
-                    activeLayer dragStart(handPos() sub(dragPath))
-                    activeLayer drag(dragPath)
-                }
+                queue push(DragStartEvent new(mousePos sub(dragPath)))
+                queue push(DragEvent new(dragPath))
             }
         }
 
         prevMousePos set!(mousePos)
     }
 
-    setActiveLayer: func (index: Int) {
-        if (index < 0 || index >= layers size) {
-            logger warn("No such layer: %d" format(index))
-            return
-        }
-
-        if (activeLayer) {
-            activeLayer clearSelection()
-        }
-        activeLayer = getLayer(index)
-        activeLayerText value = "active layer: %s" format(activeLayer name)
-    }
-
-    closeEditor: func {
-        // TODO: ask if dirty level should be saved
-        running = false
-    }
-
     initEvents: func {
-        input onExit(||
-            closeEditor()
-        )
-
-        input onKeyPress(|kev|
-            if (!root?) return
-
-            match (kev scancode) {
-                case Keys ESC =>
-                    closeEditor()
-                case Keys F1 =>
-                    push(InputDialog new(this, "Enter level path to load", |name|
-                        loader := LevelLoader new(name, this)
-                        if (!loader success) {
-                            push(AlertDialog new(this, "Could not load level %s" format(name)))
-                        }
-                    ))
-                case Keys F2 =>
-                    push(InputDialog new(this, "Enter level path to save", |name|
-                        LevelSaver new(name, this)
-                    ))
-                case Keys KP0 =>
-                    camPos set!(0, 0)
-                case Keys KP4 =>
-                    camPos sub!(camNudge, 0)
-                case Keys KP6 =>
-                    camPos add!(camNudge, 0)
-                case Keys KP2 =>
-                    camPos add!(0, camNudge)
-                case Keys KP8 => 
-                    camPos sub!(0, camNudge)
-                case Keys I =>
-                    if (activeLayer) {
-                        activeLayer insert()
-                    }
-                case Keys BACKSPACE || Keys DEL =>
-                    if (activeLayer) activeLayer deleteSelected()
-                case Keys _1 =>
-                    setActiveLayer(0)
-                case Keys _2 =>
-                    setActiveLayer(1)
-                case Keys _3 =>
-                    setActiveLayer(2)
-                case Keys _4 =>
-                    setActiveLayer(3)
-                case Keys _5 =>
-                    setActiveLayer(4)
-                case Keys _6 =>
-                    setActiveLayer(5)
-                case Keys _7 =>
-                    setActiveLayer(6)
-                case Keys _8 =>
-                    setActiveLayer(7)
-                case Keys _9 =>
-                    setActiveLayer(8)
-                case Keys _0 =>
-                    setActiveLayer(9)
-                case Keys LEFT =>
-                    if (activeLayer) {
-                        activeLayer left()
-                    }
-                case Keys RIGHT =>
-                    if (activeLayer) {
-                        activeLayer right()
-                    }
-                case Keys UP =>
-                    if (activeLayer) {
-                        activeLayer up()
-                    }
-                case Keys DOWN =>
-                    if (activeLayer) {
-                        activeLayer down()
-                    }
-            }
-        )
-
         input onMousePress(Buttons LEFT, ||
             dragStart = true
             dragPath = vec2(0, 0)
@@ -302,51 +158,19 @@ GnUI: class extends LevelBase {
             dragStart = false
             if (dragging) {
                 dragging = false
-                if (activeLayer) {
-                    activeLayer dragEnd()
-                }
+                queue push(DragStopEvent new())
             } else {
-                if (activeLayer) {
-                    activeLayer click()
-                }
+                queue push(ClickEvent new(Buttons LEFT, input getMousePos()))
             }
-        )
-
-        input onMousePress(Buttons MIDDLE, ||
-            draggingCam = true
         )
 
         input onMouseRelease(Buttons MIDDLE, ||
-            draggingCam = false
+            queue push(ClickEvent new(Buttons MIDDLE, input getMousePos()))
+        )
+
+        input onMouseRelease(Buttons RIGHT, ||
+            queue push(ClickEvent new(Buttons RIGHT, input getMousePos()))
         )
     }
-
-    screenSize: func -> Vec2 {
-        vec2(dye width, dye height)
-    }
-    
-    addLayer: func (layer: EditorLayer) {
-        layers add(layer)
-    }
-
-    getLayer: func (index: Int) -> EditorLayer {
-        layers get(index)
-    }
-
-    getLayerByName: func (name: String) -> EditorLayer {
-        for (layer in layers) {
-            if (layer name == name) {
-                return layer
-            }
-        }
-        null
-    }
-
-    /* Coordinate */
-
-    toWorld: func (mouseCoords: Vec2) -> Vec2 {
-        mouseCoords sub(screenSize() mul(0.5)) add(camPos)
-    }
 }
-
                 

@@ -16,7 +16,7 @@ use yaml
 import yaml/[Parser, Document]
 
 /* internal */
-import gnaar/[ui, loader, saver, dialogs, objects, utils]
+import gnaar/[editor, ui, loader, saver, dialogs, objects, utils]
 
 JeepFactory: class extends ObjectFactory {
 
@@ -44,14 +44,14 @@ JeepLayer: class extends EditorLayer {
     grid := SparseGrid new()
     currentName := "<none>"
 
-    init: func (.ui, .name) {
-        super(ui, name)
+    init: func (.editor, .name) {
+        super(editor, name)
 
         addFactory(JeepFactory new(this))
     }
 
     insert: func {
-        ui push(InputDialog new(ui, "Enter jeep name", |name|
+        editor frame push(InputDialog new(editor frame, "Enter jeep name", |name|
             currentName = name
         ))
     }
@@ -78,10 +78,10 @@ JeepLayer: class extends EditorLayer {
             insert()
         }
 
-        pos := ui handPos() snap(vec2(gridSize, gridSize), gridSize)
+        pos := editor handPos() snap(vec2(gridSize, gridSize), gridSize)
         posi := pos getColRow(gridSize)
 
-        if (ui input isPressed(Keys SHIFT)) {
+        if (editor input isPressed(Keys SHIFT)) {
             removeAt(pos, posi)
         } else {
             insertAt(pos, posi)
@@ -89,7 +89,7 @@ JeepLayer: class extends EditorLayer {
     }
 
     dragStart: func (handStart: Vec2) {
-        pos := ui handPos() snap(vec2(gridSize, gridSize), gridSize)
+        pos := editor handPos() snap(vec2(gridSize, gridSize), gridSize)
         current = pos getColRow(gridSize)
 
         block := grid get(current x, current y)
@@ -101,12 +101,12 @@ JeepLayer: class extends EditorLayer {
     }
 
     drag: func (delta: Vec2) {
-        pos := ui handPos() snap(vec2(gridSize, gridSize), gridSize)
+        pos := editor handPos() snap(vec2(gridSize, gridSize), gridSize)
         posi := pos getColRow(gridSize)
 
         if (posi equals(current)) return
 
-        if (ui input isPressed(Keys SHIFT)) {
+        if (editor input isPressed(Keys SHIFT)) {
             removeAt(pos, posi)
         } else {
             insertAt(pos, posi)
@@ -162,8 +162,8 @@ JeepLayer: class extends EditorLayer {
 
     destroy: func {
         eachObject(|object| object destroy())
-        ui layerGroup remove(group)
-        ui layers remove(this)
+        editor layerGroup remove(group)
+        editor layers remove(this)
     }
 
     eachObject: func (f: Func (EditorObject)) {

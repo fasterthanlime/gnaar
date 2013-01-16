@@ -12,16 +12,16 @@ import deadlogger/[Log, Logger]
 
 /* internal */
 use gnaar
-import gnaar/[utils, ui, objects]
+import gnaar/[utils, editor, objects]
 
 LevelSaver: class {
 
     logger := static Log getLogger("level-saver")
 
     name: String
-    level: GnUI
+    editor: Editor
 
-    init: func (=name, =level) {
+    init: func (=name, =editor) {
         emit()
     }
 
@@ -31,7 +31,7 @@ LevelSaver: class {
         doc insert(map)
 
         layerMap := MappingNode new()
-        for (layer in level layers) {
+        for (layer in editor layers) {
             layerMap put(layer name, emitLayer(layer))
         }
         map put("layers", layerMap)

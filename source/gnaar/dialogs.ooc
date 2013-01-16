@@ -6,24 +6,24 @@ import gnaar/[ui, utils]
 
 Dialog: class {
 
-    ui: GnUI
+    frame: Frame
     input: Input
     group: GlGroup
     color := Color new(15, 15, 15)
 
-    init: func (=ui) {
+    init: func (=frame) {
         group = GlGroup new()
-        input = ui input sub()
-        ui dialogGroup add(group)
+        input = frame input sub()
+        frame dialogGroup add(group)
     }
 
     update: func {
     }
 
     destroy: func {
-        ui dialogGroup remove(group)
+        frame dialogGroup remove(group)
         input nuke()
-        ui pop(this)
+        frame pop(this)
     }
 
 }
@@ -37,8 +37,8 @@ InputDialog: class extends Dialog {
 
     initialized := false
 
-    init: func (=ui, =prompt, =cb) {
-        super(ui)
+    init: func (=frame, =prompt, =cb) {
+        super(frame)
 
         bgRect := GlRectangle new()
         bgRect size set!(300, 60)
@@ -51,17 +51,17 @@ InputDialog: class extends Dialog {
         rect color = color lighten(0.1)
         group add(rect)
 
-        promptText = GlText new(GnUI fontPath, "> " + prompt)
+        promptText = GlText new(Frame fontPath, "> " + prompt)
         promptText color = color lighten(0.1)
         promptText pos set!(- rect size x / 2 + 10, -10)
         group add(promptText)
 
-        text = GlText new(GnUI fontPath, "")
+        text = GlText new(Frame fontPath, "")
         text color = color lighten(0.03)
         text pos set!(- rect size x / 2 + 10, 15)
         group add(text)
 
-        group center!(ui dye)
+        group center!(frame dye)
     }
 
     update: func {
@@ -98,12 +98,12 @@ AlertDialog: class extends Dialog {
 
     initialized := false
 
-    init: func ~nocb (.ui, message: String) {
-        init(ui, message, || noop := true)
+    init: func ~nocb (.frame, message: String) {
+        init(frame, message, || noop := true)
     }
 
-    init: func (=ui, message: String, =cb) {
-        super(ui)
+    init: func (=frame, message: String, =cb) {
+        super(frame)
 
         bgRect := GlRectangle new()
         bgRect size set!(300, 40)
@@ -116,12 +116,12 @@ AlertDialog: class extends Dialog {
         rect color = color lighten(0.1)
         group add(rect)
 
-        text = GlText new(GnUI fontPath, message)
+        text = GlText new(Frame fontPath, message)
         text color = color lighten(0.03)
         text pos set!(- rect size x / 2 + 10, 0)
         group add(text)
 
-        group center!(ui dye)
+        group center!(frame dye)
     }
 
     update: func {

@@ -13,7 +13,7 @@ use deadlogger
 import deadlogger/[Log, Logger]
 
 /* internal */
-import gnaar/[ui, loader, saver, dialogs, objects, utils]
+import gnaar/[editor, ui, loader, saver, dialogs, objects, utils]
 
 PropFactory: class extends ObjectFactory {
 
@@ -41,15 +41,15 @@ PropObject: class extends ImageObject {
 
 PropLayer: class extends DragLayer {
 
-    init: func (.ui, .name) {
-        super(ui, name)
+    init: func (.editor, .name) {
+        super(editor, name)
 
         addFactory(PropFactory new(this))
     }
 
     insert: func {
-        ui push(InputDialog new(ui, "Enter prop name", |name|
-            spawn("prop", name, ui handPos())
+        editor frame push(InputDialog new(editor frame, "Enter prop name", |name|
+            spawn("prop", name, editor handPos())
         ))
     }
 
