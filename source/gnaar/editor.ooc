@@ -64,7 +64,7 @@ Editor: class extends LevelBase {
             worldGroup add(layerGroup)
         }
 
-        group add(frame group)
+        group add(frame)
         initHud()
         initEvents()
     }

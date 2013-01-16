@@ -17,8 +17,11 @@ import gnaar/[dialogs, events]
 
 Widget: class extends GlDrawable {
 
+    parent: Panel
     pos := vec2(0, 0)
     size := vec2(0, 0)
+    visible := true
+    dirty := false
 
     draw: func (dye: DyeContext) {
         // override stuff here
@@ -28,10 +31,51 @@ Widget: class extends GlDrawable {
 
 Panel: class extends Widget {
 
+    logger := Log getLogger(This name)
     children := ArrayList<Widget> new()
+
+    margin := vec2(0, 0)
+    padding := vec2(0, 0)
 
     add: func (widget: Widget) {
         children add(widget)
+        widget parent = this
+        touch()
+    }
+
+    touch: func {
+        dirty = true
+    }
+
+    draw: func (dye: DyeContext) {
+        if (!visible) return
+
+        if (dirty) {
+            repack()
+        }
+
+        for (c in children) {
+            c draw(dye)
+        }
+    }
+
+    repack: func {
+        logger info("Repacking with %d children", children size)
+
+        x := margin x
+        y := margin y
+
+        for (c in children) {
+            logger info(" - (%.2f, %.2f)", x, y)
+            c pos set!(x, y)
+            x += c size x
+        }
+
+        dirty = false
+
+        if (parent) {
+            parent repack()
+        }
     }
 
 }
@@ -43,15 +87,26 @@ Label: class extends Widget {
     color := Color black()
 
     init: func (value: String) {
-        _text = GlText new(Frame fontPath, value)
+        _text = GlText new(Frame fontPath, "")
+        _text pos set!(0, 0)
+        setValue(value)
     }
 
     setValue: func (value: String) {
         _text value = value
+        size set!(_text size)
+        if (parent) {
+            parent touch()
+        }
     }
 
     setValue: func ~var (value: String, args: ...) {
-        _text value = value format(args)
+        setValue(value format(args))
+    }
+
+    draw: func (dye: DyeContext) {
+        _text pos set!(pos)
+        _text draw(dye)
     }
 
 }
@@ -172,5 +227,11 @@ Frame: class extends Panel {
             queue push(ClickEvent new(Buttons RIGHT, input getMousePos()))
         )
     }
+
+    draw: func (dye: DyeContext) {
+        group draw(dye)
+        super(dye)
+    }
+
 }
                 
