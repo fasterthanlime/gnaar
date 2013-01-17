@@ -68,6 +68,8 @@ Editor: class extends LevelBase {
         group add(frame)
         initHud()
         initEvents()
+
+        reset()
     }
 
     initHud: func {
@@ -78,6 +80,7 @@ Editor: class extends LevelBase {
         frame add(mousePosText)
 
         activeLayerText = Label new("active layer: <unknown>")
+        activeLayerText setDisplay(DisplayFlavor BLOCK)
         frame add(activeLayerText)
     }
 
@@ -133,7 +136,7 @@ Editor: class extends LevelBase {
     }
 
     center: func -> Vec2 {
-        frame size mul(0.5)
+        frame givenSize mul(0.5)
     }
 
     /* Event handling */

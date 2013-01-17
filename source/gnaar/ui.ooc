@@ -15,17 +15,99 @@ import sdl2/[Core, Event]
 // internal
 import gnaar/[dialogs, events]
 
+FloatFlavor: enum {
+    NONE
+    LEFT
+    RIGHT
+    INHERIT
+}
+
+PositionFlavor: enum {
+    STATIC
+    ABSOLUTE
+    FIXED
+    RELATIVE
+    INHERIT
+}
+
+SizeFlavor: enum {
+    AUTO
+    LENGTH /* e.g. 12px */
+    PERCENTAGE /* e.g. 33% */
+    INHERIT
+
+    toString: func -> String {
+        match this {
+            case This AUTO => "auto"
+            case This LENGTH => "length"
+            case This PERCENTAGE => "percentage"
+            case This INHERIT => "inherit"
+        }
+    }
+}
+
+DisplayFlavor: enum {
+    INLINE
+    BLOCK
+    INLINEBLOCK
+}
+
 Widget: class extends GlDrawable {
 
+    // can be null
     parent: Panel
-    pos := vec2(0, 0)
+
+    floating := FloatFlavor NONE
+    position := PositionFlavor STATIC
+    width := SizeFlavor AUTO
+    height := SizeFlavor AUTO
+    display := DisplayFlavor INLINE
+
+    givenPos := vec2(0, 0)
+    givenSize := vec2(0, 0)
+
+    // computed size, will be invalid if dirty
     size := vec2(0, 0)
+
     visible := true
+
+    // if true, need a repack before display
     dirty := false
 
     draw: func (dye: DyeContext) {
         // override stuff here
     }
+
+    setWidth: func ~length (value: Float) {
+        givenSize x = value
+        setWidthFlavor(SizeFlavor LENGTH)
+    }
+
+    setRelativeWidth: func (value: Float) {
+        givenSize x = value
+        setWidthFlavor(SizeFlavor PERCENTAGE)
+    }
+
+    setWidthFlavor: func (=width)
+
+    setHeight: func ~length (value: Float) {
+        givenSize y = value
+        setHeightFlavor(SizeFlavor LENGTH)
+    }
+
+    setRelativeHeight: func (value: Float) {
+        givenSize y = value
+        setHeightFlavor(SizeFlavor PERCENTAGE)
+    }
+
+    setHeightFlavor: func (=height)
+
+    setSize: func (x, y: Float) {
+        setWidth(x)
+        setHeight(y)
+    }
+
+    setDisplay: func (=display)
 
 }
 
@@ -36,6 +118,10 @@ Panel: class extends Widget {
 
     margin := vec2(0, 0)
     padding := vec2(0, 0)
+
+    init: func {
+        display = DisplayFlavor BLOCK
+    }
 
     add: func (widget: Widget) {
         children add(widget)
@@ -62,13 +148,43 @@ Panel: class extends Widget {
     repack: func {
         logger info("Repacking with %d children", children size)
 
-        x := margin x
-        y := margin y
+        baseX := margin x
+        baseY := margin y
 
-        for (c in children) {
+        if (height == SizeFlavor LENGTH) {
+            baseY = givenSize y - margin y
+        }
+
+        (x, y) := (baseX, baseY)
+
+        previousChild : Widget = null
+        currentDisplay := DisplayFlavor INLINE
+
+        newlined := true
+
+        for (child in children) {
+            if (child display == DisplayFlavor BLOCK && !newlined) {
+                x = baseX
+                newlined = true
+
+                if (previousChild) {
+                    y -= (previousChild size y + padding y)
+                }
+            }
+
             logger info(" - (%.2f, %.2f)", x, y)
-            c pos set!(x, y)
-            x += c size x + padding x
+            child pos set!(x, y)
+
+            if (child display == DisplayFlavor BLOCK) {
+                newlined = true
+                x = baseX
+                y -= (child size y + padding y)
+            } else {
+                newlined = false
+                x += (child size x + padding x)
+            }
+
+            previousChild = child
         }
 
         dirty = false
@@ -82,7 +198,7 @@ Panel: class extends Widget {
 
 Label: class extends Widget {
 
-    margin := vec2(5, 5)
+    margin := vec2(0, 0)
     _text: GlText
 
     color := Color black()
@@ -106,7 +222,7 @@ Label: class extends Widget {
     }
 
     draw: func (dye: DyeContext) {
-        _text pos set!(pos add(margin))
+        _text pos set!(pos add(margin) sub(0, size y))
         _text draw(dye)
     }
 
@@ -146,8 +262,10 @@ Frame: class extends Panel {
 
     // Constructor
     init: func (=dye) {
+        super()
+
         input = dye input
-        size set!(dye width, dye height)
+        setSize(dye width, dye height)
 
         group = GlGroup new()
 
