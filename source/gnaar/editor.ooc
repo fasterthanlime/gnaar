@@ -46,16 +46,15 @@ Editor: class extends LevelBase {
 
     running := true
 
-    init: func (dye: DyeContext, =factory) {
-        frame = Frame new(dye)
+    init: func (scene: Scene, =factory) {
+        frame = Frame new(scene)
         frame padding set!(10, 10)
         input = frame input
 
         listener = EditorEventListener new(this)
         frame queue subscribe(listener)
 
-        group = GlGroup new()
-        dye add(group)
+        group = scene
 
         worldGroup = GlGroup new()
         group add(worldGroup)

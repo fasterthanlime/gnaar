@@ -171,7 +171,7 @@ Panel: class extends Widget {
 
                 size x = parent size x * givenSize x
             case =>
-                Exception new("Unsupported size flavor: %d" format(width)) throw()
+                //Exception new("Unsupported size flavor: %d" format(width)) throw()
         }
 
         match height {
@@ -184,7 +184,7 @@ Panel: class extends Widget {
 
                 size y = parent size y * givenSize y
             case =>
-                Exception new("Unsupported size flavor: %d" format(height)) throw()
+                //Exception new("Unsupported size flavor: %d" format(height)) throw()
         }
     }
 
@@ -192,6 +192,7 @@ Panel: class extends Widget {
         logger info("Resizing, width = %s, height = %s",
             width toString(), height toString())
         resize()
+        logger info("Resized to %s")
 
         logger info("Repacking with %d children", children size)
 
@@ -284,7 +285,7 @@ Frame: class extends Panel {
     fontPath := static "assets/ttf/font.ttf"
     logger := static Log getLogger(This name)
 
-    dye: DyeContext
+    scene: Scene
     input: Input
 
     queue := EventQueue new()
@@ -308,11 +309,11 @@ Frame: class extends Panel {
     dialogStack := Stack<Dialog> new()
 
     // Constructor
-    init: func (=dye) {
+    init: func (=scene) {
         super()
 
-        input = dye input
-        setSize(dye width, dye height)
+        input = scene input
+        setSize(scene size x, scene size y)
 
         group = GlGroup new()
 
