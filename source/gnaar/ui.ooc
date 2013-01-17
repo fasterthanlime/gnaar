@@ -119,6 +119,8 @@ Panel: class extends Widget {
     margin := vec2(0, 0)
     padding := vec2(0, 0)
 
+    backgroundColorRect: GlRectangle
+
     init: func {
         display = DisplayFlavor BLOCK
     }
@@ -140,19 +142,64 @@ Panel: class extends Widget {
             repack()
         }
 
+        if (backgroundColorRect) {
+            backgroundColorRect size set!(size)
+            backgroundColorRect draw(dye)
+        }
+
         for (c in children) {
             c draw(dye)
         }
     }
 
+    setBackgroundColor: func (color: Color) {
+        if (!backgroundColorRect) {
+            backgroundColorRect = GlRectangle new()
+            backgroundColorRect center = false
+        }
+        backgroundColorRect color set!(color)
+    }
+
+    resize: func {
+        match width {
+            case SizeFlavor LENGTH =>
+                size x = givenSize x
+            case SizeFlavor PERCENTAGE =>
+                if (!parent) {
+                    Exception new("Percentage-sized width with no parent") throw()
+                }
+
+                size x = parent size x * givenSize x
+            case =>
+                Exception new("Unsupported size flavor: %d" format(width)) throw()
+        }
+
+        match height {
+            case SizeFlavor LENGTH =>
+                size y = givenSize y
+            case SizeFlavor PERCENTAGE =>
+                if (!parent) {
+                    Exception new("Percentage-sized height with no parent") throw()
+                }
+
+                size y = parent size y * givenSize y
+            case =>
+                Exception new("Unsupported size flavor: %d" format(height)) throw()
+        }
+    }
+
     repack: func {
+        logger info("Resizing, width = %s, height = %s",
+            width toString(), height toString())
+        resize()
+
         logger info("Repacking with %d children", children size)
 
         baseX := margin x
         baseY := margin y
 
         if (height == SizeFlavor LENGTH) {
-            baseY = givenSize y - margin y
+            baseY = size y - margin y
         }
 
         (x, y) := (baseX, baseY)
