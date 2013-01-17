@@ -81,7 +81,7 @@ JeepLayer: class extends EditorLayer {
         pos := editor handPos() snap(vec2(gridSize, gridSize), gridSize)
         posi := pos getColRow(gridSize)
 
-        if (editor input isPressed(Keys SHIFT)) {
+        if (editor input isPressed(KeyCode SHIFT)) {
             removeAt(pos, posi)
         } else {
             insertAt(pos, posi)
@@ -106,7 +106,7 @@ JeepLayer: class extends EditorLayer {
 
         if (posi equals(current)) return
 
-        if (editor input isPressed(Keys SHIFT)) {
+        if (editor input isPressed(KeyCode SHIFT)) {
             removeAt(pos, posi)
         } else {
             insertAt(pos, posi)

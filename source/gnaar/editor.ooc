@@ -150,79 +150,79 @@ Editor: class extends LevelBase {
             if (!frame root?) return
 
             match (kev scancode) {
-                case Keys ESC =>
+                case KeyCode ESC =>
                     closeEditor()
-                case Keys F1 =>
+                case KeyCode F1 =>
                     frame push(InputDialog new(frame, "Enter level path to load", |name|
                         loader := LevelLoader new(name, this)
                         if (!loader success) {
                             frame push(AlertDialog new(frame, "Could not load level %s" format(name)))
                         }
                     ))
-                case Keys F2 =>
+                case KeyCode F2 =>
                     frame push(InputDialog new(frame, "Enter level path to save", |name|
                         LevelSaver new(name, this)
                     ))
-                case Keys KP0 =>
+                case KeyCode KP0 =>
                     camPos set!(0, 0)
-                case Keys KP4 =>
+                case KeyCode KP4 =>
                     camPos sub!(camNudge, 0)
-                case Keys KP6 =>
+                case KeyCode KP6 =>
                     camPos add!(camNudge, 0)
-                case Keys KP2 =>
+                case KeyCode KP2 =>
                     camPos add!(0, camNudge)
-                case Keys KP8 => 
+                case KeyCode KP8 => 
                     camPos sub!(0, camNudge)
-                case Keys I =>
+                case KeyCode I =>
                     if (activeLayer) {
                         activeLayer insert()
                     }
-                case Keys BACKSPACE || Keys DEL =>
+                case KeyCode BACKSPACE || KeyCode DEL =>
                     if (activeLayer) activeLayer deleteSelected()
-                case Keys _1 =>
+                case KeyCode _1 =>
                     setActiveLayer(0)
-                case Keys _2 =>
+                case KeyCode _2 =>
                     setActiveLayer(1)
-                case Keys _3 =>
+                case KeyCode _3 =>
                     setActiveLayer(2)
-                case Keys _4 =>
+                case KeyCode _4 =>
                     setActiveLayer(3)
-                case Keys _5 =>
+                case KeyCode _5 =>
                     setActiveLayer(4)
-                case Keys _6 =>
+                case KeyCode _6 =>
                     setActiveLayer(5)
-                case Keys _7 =>
+                case KeyCode _7 =>
                     setActiveLayer(6)
-                case Keys _8 =>
+                case KeyCode _8 =>
                     setActiveLayer(7)
-                case Keys _9 =>
+                case KeyCode _9 =>
                     setActiveLayer(8)
-                case Keys _0 =>
+                case KeyCode _0 =>
                     setActiveLayer(9)
-                case Keys LEFT =>
+                case KeyCode LEFT =>
                     if (activeLayer) {
                         activeLayer left()
                     }
-                case Keys RIGHT =>
+                case KeyCode RIGHT =>
                     if (activeLayer) {
                         activeLayer right()
                     }
-                case Keys UP =>
+                case KeyCode UP =>
                     if (activeLayer) {
                         activeLayer up()
                     }
-                case Keys DOWN =>
+                case KeyCode DOWN =>
                     if (activeLayer) {
                         activeLayer down()
                     }
             }
         )
 
-        input onMousePress(Buttons MIDDLE, ||
+        input onMousePress(MouseButton MIDDLE, ||
             draggingCam = true
         )
 
-        input onMouseRelease(Buttons MIDDLE, ||
+        input onMouseRelease(MouseButton MIDDLE, ||
             draggingCam = false
         )
     }
@@ -290,7 +290,7 @@ EditorEventListener: class extends EventListener {
                 }
 
             case click: ClickEvent =>
-                if (click button == Buttons LEFT && editor activeLayer) {
+                if (click button == MouseButton LEFT && editor activeLayer) {
                     editor activeLayer click()
                 }
 

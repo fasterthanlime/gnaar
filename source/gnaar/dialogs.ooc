@@ -70,12 +70,12 @@ InputDialog: class extends Dialog {
         cb := this cb // silly workaround..
         input onKeyPress(|kev|
             match (kev scancode) {
-                case Keys ESC =>
+                case KeyCode ESC =>
                     destroy()
-                case Keys ENTER =>
+                case KeyCode ENTER =>
                     destroy()
                     cb(text value)
-                case Keys BACKSPACE =>
+                case KeyCode BACKSPACE =>
                     if (text value size > 0) {
                         text value = text value[0..-2]
                     }

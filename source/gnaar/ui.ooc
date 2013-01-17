@@ -326,28 +326,28 @@ Frame: class extends Panel {
     }
 
     initEvents: func {
-        input onMousePress(Buttons LEFT, ||
+        input onMousePress(MouseButton LEFT, ||
             dragStart = true
             dragPath = vec2(0, 0)
             dragging = false
         )
 
-        input onMouseRelease(Buttons LEFT, ||
+        input onMouseRelease(MouseButton LEFT, ||
             dragStart = false
             if (dragging) {
                 dragging = false
                 queue push(DragStopEvent new())
             } else {
-                queue push(ClickEvent new(Buttons LEFT, input getMousePos()))
+                queue push(ClickEvent new(MouseButton LEFT, input getMousePos()))
             }
         )
 
-        input onMouseRelease(Buttons MIDDLE, ||
-            queue push(ClickEvent new(Buttons MIDDLE, input getMousePos()))
+        input onMouseRelease(MouseButton MIDDLE, ||
+            queue push(ClickEvent new(MouseButton MIDDLE, input getMousePos()))
         )
 
-        input onMouseRelease(Buttons RIGHT, ||
-            queue push(ClickEvent new(Buttons RIGHT, input getMousePos()))
+        input onMouseRelease(MouseButton RIGHT, ||
+            queue push(ClickEvent new(MouseButton RIGHT, input getMousePos()))
         )
     }
 

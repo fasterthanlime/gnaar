@@ -213,7 +213,7 @@ DragLayer: class extends EditorLayer {
 
     click: func {
         // Shift = multi-selection
-        if (!editor input isPressed(Keys SHIFT)) {
+        if (!editor input isPressed(KeyCode SHIFT)) {
             clearSelection()
         }
 
@@ -223,7 +223,7 @@ DragLayer: class extends EditorLayer {
     singleSelect: func {
         o := singlePick()
         if (o) {
-            if (editor input isPressed(Keys SHIFT)) {
+            if (editor input isPressed(KeyCode SHIFT)) {
                 toggleSelect(o)
             } else {
                 select(o)
@@ -276,9 +276,9 @@ DragLayer: class extends EditorLayer {
 
         for (o in selectedObjects) {
             ourDelta := delta
-            if(editor input isPressed(Keys X)) {
+            if(editor input isPressed(KeyCode X)) {
                 ourDelta y = 0
-            } else if (editor input isPressed(Keys Y)) {
+            } else if (editor input isPressed(KeyCode Y)) {
                 ourDelta x = 0
             }
 
@@ -308,7 +308,7 @@ DragLayer: class extends EditorLayer {
             }
         }
 
-        if (moving && editor input isPressed(Keys D)) {
+        if (moving && editor input isPressed(KeyCode D)) {
             old := ArrayList<EditorObject> new()
             old addAll(selectedObjects)
             clearSelection()
@@ -325,7 +325,7 @@ DragLayer: class extends EditorLayer {
         moving = false
 
         // CTRL = precise dragging
-        if (!editor input isPressed(Keys CTRL)) {
+        if (!editor input isPressed(KeyCode CTRL)) {
             for (o in selectedObjects) {
                 o snap!(gridSize)
             }
