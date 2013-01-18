@@ -1,5 +1,8 @@
 
 // libs
+use glew
+import glew
+
 use dye
 import dye/[core, input, sprite, font, math, primitives]
 
@@ -28,6 +31,7 @@ PositionFlavor: enum {
     FIXED
     RELATIVE
     INHERIT
+    CENTER
 }
 
 SizeFlavor: enum {
@@ -78,29 +82,41 @@ Widget: class extends GlDrawable {
         // override stuff here
     }
 
+    touch: func {
+        dirty = true
+    }
+
     setWidth: func ~length (value: Float) {
         givenSize x = value
         setWidthFlavor(SizeFlavor LENGTH)
+        touch()
     }
 
     setRelativeWidth: func (value: Float) {
         givenSize x = value
         setWidthFlavor(SizeFlavor PERCENTAGE)
+        touch()
     }
 
-    setWidthFlavor: func (=width)
+    setWidthFlavor: func (=width) {
+        touch()
+    }
 
     setHeight: func ~length (value: Float) {
         givenSize y = value
         setHeightFlavor(SizeFlavor LENGTH)
+        touch()
     }
 
     setRelativeHeight: func (value: Float) {
         givenSize y = value
         setHeightFlavor(SizeFlavor PERCENTAGE)
+        touch()
     }
 
-    setHeightFlavor: func (=height)
+    setHeightFlavor: func (=height) {
+        touch()
+    }
 
     setSize: func (x, y: Float) {
         setWidth(x)
@@ -108,6 +124,8 @@ Widget: class extends GlDrawable {
     }
 
     setDisplay: func (=display)
+
+    setPositionFlavor: func (=position)
 
 }
 
@@ -128,11 +146,7 @@ Panel: class extends Widget {
     add: func (widget: Widget) {
         children add(widget)
         widget parent = this
-        touch()
-    }
-
-    touch: func {
-        dirty = true
+        widget touch()
     }
 
     draw: func (dye: DyeContext) {
@@ -142,6 +156,8 @@ Panel: class extends Widget {
             repack()
         }
 
+        glPushMatrix()
+        glTranslatef(pos x, pos y, 0)
         if (backgroundColorRect) {
             backgroundColorRect size set!(size)
             backgroundColorRect draw(dye)
@@ -150,6 +166,7 @@ Panel: class extends Widget {
         for (c in children) {
             c draw(dye)
         }
+        glPopMatrix()
     }
 
     setBackgroundColor: func (color: Color) {
@@ -169,7 +186,7 @@ Panel: class extends Widget {
                     Exception new("Percentage-sized width with no parent") throw()
                 }
 
-                size x = parent size x * givenSize x
+                size x = parent size x * (givenSize x * 0.01)
             case =>
                 //Exception new("Unsupported size flavor: %d" format(width)) throw()
         }
@@ -182,17 +199,17 @@ Panel: class extends Widget {
                     Exception new("Percentage-sized height with no parent") throw()
                 }
 
-                size y = parent size y * givenSize y
+                size y = parent size y * (givenSize y * 0.01)
             case =>
                 //Exception new("Unsupported size flavor: %d" format(height)) throw()
         }
     }
 
     repack: func {
-        logger info("Resizing, width = %s, height = %s",
-            width toString(), height toString())
+        logger info("Resizing, width = %s, height = %s, givenSize = %s",
+            width toString(), height toString(), givenSize _)
         resize()
-        logger info("Resized to %s")
+        logger info("Resized to %s", size _)
 
         logger info("Repacking with %d children", children size)
 
@@ -220,8 +237,16 @@ Panel: class extends Widget {
                 }
             }
 
-            logger info(" - (%.2f, %.2f)", x, y)
-            child pos set!(x, y)
+            if (child position = PositionFlavor CENTER) {
+                logger info("centering, halfSize = %s, halfChildSize = %s",
+                    size mul(0.5) _, child size mul(0.5) _)
+                newpos := size mul(0.5) sub(child size mul(0.5))
+                logger info(" - center, (%.2f, %.2f)", newpos x, newpos y)
+                child pos set!(newpos)
+            } else {
+                logger info(" - static, (%.2f, %.2f)", x, y)
+                child pos set!(x, y)
+            }
 
             if (child display == DisplayFlavor BLOCK) {
                 newlined = true
