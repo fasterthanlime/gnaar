@@ -25,11 +25,16 @@ FloatFlavor: enum {
     INHERIT
 }
 
+// FIXME: workaround: ABSOLUTE and RELATIVE
+// are broked on MinGW. Don't ask, but the
+// correct fix is to make rock prefix.
+// On the other hand, that'll break most bindings.
+// Yay?
 PositionFlavor: enum {
     STATIC
-    ABSOLUTE
+    //ABSOLUTE
     FIXED
-    RELATIVE
+    //RELATIVE
     INHERIT
     CENTER
 }
