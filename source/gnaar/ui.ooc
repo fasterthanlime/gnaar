@@ -242,7 +242,7 @@ Panel: class extends Widget {
                 }
             }
 
-            if (child position = PositionFlavor CENTER) {
+            if (child position == PositionFlavor CENTER) {
                 logger info("centering, halfSize = %s, halfChildSize = %s",
                     size mul(0.5) _, child size mul(0.5) _)
                 newpos := size mul(0.5) sub(child size mul(0.5))
