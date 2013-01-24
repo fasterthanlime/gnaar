@@ -341,14 +341,14 @@ JeepObject: class extends EditorObject {
     }
 
     topBottomToY: static func (top, bottom: Bool) -> Int {
-        if (top) {
-            if (bottom) {
+        if (bottom) {
+            if (top) {
                 2
             } else {
                 3
             }
         } else {
-            if (bottom) {
+            if (top) {
                 1
             } else {
                 0
