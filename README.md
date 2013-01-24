@@ -1,4 +1,3 @@
-
 ## gnaar
 
 gnaar is an asset toolchain framework based on the dye graphics library
@@ -14,4 +13,5 @@ possible.
 ### Links
 
   * dye: https://github.com/nddrylliog/dye
+  * yaml: https://github.com/nddrylliog/ooc-yaml
 
