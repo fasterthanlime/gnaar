@@ -315,8 +315,10 @@ JeepObject: class extends EditorObject {
     }
 
     notify: func (grid: SparseGrid) {
-        top    = (grid get(posi x, posi y - 1) != null)
-        bottom = (grid get(posi x, posi y + 1) != null)
+
+        bottom = (grid get(posi x, posi y - 1) != null)
+        top    = (grid get(posi x, posi y + 1) != null)
+
         left   = (grid get(posi x - 1, posi y) != null)
         right  = (grid get(posi x + 1, posi y) != null)
 
@@ -341,14 +343,14 @@ JeepObject: class extends EditorObject {
     }
 
     topBottomToY: static func (top, bottom: Bool) -> Int {
-        if (bottom) {
-            if (top) {
+        if (top) {
+            if (bottom) {
                 2
             } else {
                 3
             }
         } else {
-            if (top) {
+            if (bottom) {
                 1
             } else {
                 0
@@ -361,7 +363,7 @@ JeepObject: class extends EditorObject {
     }
 
     snap!: func (gridSize: Int) {
-        // fuck off
+        // fuck off, please
     }
 
     clone: func -> This {
