@@ -79,7 +79,7 @@ Editor: class extends LevelBase {
         frame add(mousePosText)
 
         activeLayerText = Label new("active layer: <unknown>")
-        activeLayerText setDisplay(DisplayFlavor BLOCK)
+        activeLayerText setDisplayFlavor(DisplayFlavor BLOCK)
         frame add(activeLayerText)
     }
 

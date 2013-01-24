@@ -128,7 +128,7 @@ Widget: class extends GlDrawable {
         setHeight(y)
     }
 
-    setDisplay: func (=display)
+    setDisplayFlavor: func (=display)
 
     setPositionFlavor: func (=position)
 
@@ -151,7 +151,7 @@ Panel: class extends Widget {
     add: func (widget: Widget) {
         children add(widget)
         widget parent = this
-        widget touch()
+        touch()
     }
 
     draw: func (dye: DyeContext) {
@@ -219,11 +219,7 @@ Panel: class extends Widget {
         logger info("Repacking with %d children", children size)
 
         baseX := margin x
-        baseY := margin y
-
-        if (height == SizeFlavor LENGTH) {
-            baseY = size y - margin y
-        }
+        baseY := size y - margin y
 
         (x, y) := (baseX, baseY)
 
@@ -243,9 +239,12 @@ Panel: class extends Widget {
             }
 
             if (child position == PositionFlavor CENTER) {
+                halfChildSize := child size mul(0.5)
+
                 logger info("centering, halfSize = %s, halfChildSize = %s",
-                    size mul(0.5) _, child size mul(0.5) _)
-                newpos := size mul(0.5) sub(child size mul(0.5))
+                    size mul(0.5) _, halfChildSize _)
+
+                newpos := size mul(0.5) sub(halfChildSize)
                 logger info(" - center, (%.2f, %.2f)", newpos x, newpos y)
                 child pos set!(newpos)
             } else {
@@ -281,8 +280,8 @@ Label: class extends Widget {
 
     color := Color black()
 
-    init: func (value: String) {
-        _text = GlText new(Frame fontPath, value)
+    init: func (value: String, fontSize := 20) {
+        _text = GlText new(Frame fontPath, value, fontSize)
         _text pos set!(0, 0)
         repack()
     }
