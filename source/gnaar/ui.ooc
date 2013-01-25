@@ -117,7 +117,7 @@ Widget: class extends GlDrawable {
 
     process: func (e: GEvent) {
         // do what you want!
-        "Widget %s got event %s" printfln(class name, e getName())
+        //"Widget %s got event %s" printfln(class name, e getName())
     }
 
     collideTree: func (needle: Vec2, cb: Func (Widget, Bool)) {
@@ -305,13 +305,6 @@ Label: class extends Widget {
 
     draw: func (dye: DyeContext) {
         _text pos set!(adjustedPos())
-
-        if (hovered) {
-            _text color = color
-        } else {
-            _text color = color mul(0.7)
-        }
-
         _text render(dye)
     }
 
