@@ -3,7 +3,7 @@ use chipmunk
 import chipmunk
 
 use dye
-import dye/[core, input, sprite, font, primitives, math, anim]
+import dye/[core, input, sprite, text, primitives, math, anim]
 
 import math
 

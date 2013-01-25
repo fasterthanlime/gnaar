@@ -1,7 +1,7 @@
 
 // third-party libs
 use dye
-import dye/[core, input, math, font]
+import dye/[core, input, math, text]
 
 use gnaar
 import gnaar/[deck]

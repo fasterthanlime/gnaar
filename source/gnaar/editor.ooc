@@ -1,7 +1,7 @@
 
 // libs
 use dye
-import dye/[core, input, sprite, font, math, primitives]
+import dye/[core, input, sprite, text, math, primitives]
 
 import math
 import structs/[ArrayList, Stack, List]

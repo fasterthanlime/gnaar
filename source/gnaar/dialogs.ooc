@@ -1,6 +1,6 @@
 
 use dye
-import dye/[core, input, sprite, font, primitives, math]
+import dye/[core, input, sprite, text, primitives, math]
 
 import gnaar/[ui, utils]
 

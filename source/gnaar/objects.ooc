@@ -1,7 +1,7 @@
 
 // third-party stuff
 use dye
-import dye/[core, input, sprite, font, math, primitives]
+import dye/[core, input, sprite, text, math, primitives]
 
 use yaml
 import yaml/[Document]
