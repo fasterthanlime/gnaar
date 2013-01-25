@@ -415,6 +415,9 @@ Frame: class extends Panel {
 
         prevMousePos set!(mousePos)
 
+        // Everything after this point doesn't happen when we have dialogs
+        if (!root?) return
+
         collideTree(mousePos, |widget, touching| {
             if (touching) {
                 if (!widget hovered) {
@@ -467,10 +470,11 @@ Frame: class extends Panel {
     }
 
     draw: func (dye: DyeContext) {
-        group draw(dye)
-
         // draw children
         super(dye)
+
+        // then draw rest: dialogs, etc.
+        group draw(dye)
     }
 
 }

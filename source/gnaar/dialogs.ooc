@@ -41,24 +41,24 @@ InputDialog: class extends Dialog {
         super(frame)
 
         bgRect := GlRectangle new()
-        bgRect size set!(300, 60)
+        bgRect size set!(600, 120)
         bgRect color = color
         group add(bgRect)
 
         rect := GlRectangle new()
-        rect size set!(300, 60)
+        rect size set!(600, 120)
         rect filled = false
         rect color = color lighten(0.1)
         group add(rect)
 
         promptText = GlText new(Frame fontPath, "> " + prompt)
         promptText color = color lighten(0.1)
-        promptText pos set!(- rect size x / 2 + 10, -10)
+        promptText pos set!(- rect size x / 2 + 10, 30)
         group add(promptText)
 
         text = GlText new(Frame fontPath, "")
         text color = color lighten(0.03)
-        text pos set!(- rect size x / 2 + 10, 15)
+        text pos set!(- rect size x / 2 + 10, -20)
         group add(text)
 
         group center!(frame scene dye)
@@ -106,12 +106,12 @@ AlertDialog: class extends Dialog {
         super(frame)
 
         bgRect := GlRectangle new()
-        bgRect size set!(300, 40)
+        bgRect size set!(600, 80)
         bgRect color = color
         group add(bgRect)
 
         rect := GlRectangle new()
-        rect size set!(300, 40)
+        rect size set!(600, 80)
         rect filled = false
         rect color = color lighten(0.1)
         group add(rect)
@@ -129,6 +129,11 @@ AlertDialog: class extends Dialog {
 
         cb := this cb // silly workaround..
         input onKeyPress(|kev|
+            destroy()
+            cb()
+        )
+
+        input onMouseRelease(MouseButton LEFT, ||
             destroy()
             cb()
         )
