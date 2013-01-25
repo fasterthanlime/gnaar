@@ -115,9 +115,14 @@ Widget: class extends GlDrawable {
 
     setPositionFlavor: func (=position)
 
+    setFixedPosition: func (.givenPos) {
+        setPositionFlavor(PositionFlavor FIXED)
+        this givenPos set!(givenPos)
+    }
+
     process: func (e: GEvent) {
-        // do what you want!
-        //"Widget %s got event %s" printfln(class name, e getName())
+        // You shall override this if you
+        // want to react to events, good sir.
     }
 
     collideTree: func (needle: Vec2, cb: Func (Widget, Bool)) {
@@ -243,24 +248,36 @@ Panel: class extends Widget {
                 }
             }
 
-            if (child position == PositionFlavor CENTER) {
-                halfChildSize := child size mul(0.5)
+            match (child position) {
+                // ----------------------------------
+                case PositionFlavor CENTER =>
+                    halfChildSize := child size mul(0.5)
 
-                logger info("centering, halfSize = %s, halfChildSize = %s",
-                    size mul(0.5) _, halfChildSize _)
+                    logger info("centering, halfSize = %s, halfChildSize = %s",
+                        size mul(0.5) _, halfChildSize _)
 
-                newpos := size mul(0.5) sub(halfChildSize)
-                logger info(" - center, (%.2f, %.2f)", newpos x, newpos y)
-                child pos set!(newpos)
-            } else {
-                logger info(" - static, (%.2f, %.2f)", x, y)
-                child pos set!(x, y)
+                    newpos := size mul(0.5) sub(halfChildSize)
+                    logger info(" - center, (%.2f, %.2f)", newpos x, newpos y)
+                    child pos set!(newpos)
+
+                // ----------------------------------
+                case PositionFlavor STATIC =>
+                    logger info(" - static, (%.2f, %.2f)", x, y)
+
+                    if (child display == DisplayFlavor BLOCK) {
+                        y -= child size y
+                    }
+                    child pos set!(x, y)
+
+                // ----------------------------------
+                case PositionFlavor FIXED =>
+                    child pos set!(child givenPos)
             }
 
             if (child display == DisplayFlavor BLOCK) {
                 newlined = true
                 x = baseX
-                y -= (child size y + padding y)
+                y -= padding y
             } else {
                 newlined = false
                 x += (child size x + padding x)
@@ -280,7 +297,6 @@ Panel: class extends Widget {
 
 Label: class extends Widget {
 
-    margin := vec2(0, 0)
     _text: GlText
 
     color := Color new(220, 220, 220)
@@ -305,20 +321,12 @@ Label: class extends Widget {
 
     draw: func (dye: DyeContext) {
         _text color set!(color)
-        _text pos set!(adjustedPos())
+        _text pos set!(pos)
         _text render(dye)
     }
 
-    contains?: func (needle: Vec2) -> Bool {
-        BoundingBox contains?(adjustedPos(), size, needle, false)
-    }
-
-    adjustedPos: func -> Vec2 {
-        pos add(margin) sub(0, size y)
-    }
-
     repack: func {
-        size set!(_text size add(margin))
+        size set!(_text size)
     }
 
 }

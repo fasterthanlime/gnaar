@@ -37,19 +37,16 @@ Editor: class extends LevelBase {
 
     /* Interface */
     frame: Frame
+    sidebar: Panel
     input: Input
     listener: EditorEventListener
 
-    camPosText: Label
-    mousePosText: Label
     activeLayerText: Label
 
     running := true
 
     init: func (scene: Scene, =factory) {
         frame = Frame new(scene)
-        frame margin set!(5, 5)
-        frame padding set!(10, 10)
         input = frame input
 
         listener = EditorEventListener new(this)
@@ -73,18 +70,17 @@ Editor: class extends LevelBase {
     }
 
     initHud: func {
-        camPosText = Label new("camera pos")
-        camPosText color set!(30, 30, 30)
-        frame add(camPosText)
-
-        mousePosText = Label new("camera pos")
-        mousePosText color set!(30, 30, 30)
-        frame add(mousePosText)
+        sidebar = Panel new()
+        sidebar setBackgroundColor(Color new(30, 30, 30))
+        sidebar margin set!(10, 10)
+        sidebar padding set!(10, 10)
+        sidebar setWidth(400)
+        sidebar setRelativeHeight(100)
+        frame add(sidebar)
 
         activeLayerText = Label new("active layer: <unknown>")
-        activeLayerText color set!(30, 30, 30)
         activeLayerText setDisplayFlavor(DisplayFlavor BLOCK)
-        frame add(activeLayerText)
+        sidebar add(activeLayerText)
     }
 
     handPos: func -> Vec2 {
@@ -121,8 +117,6 @@ Editor: class extends LevelBase {
     }
 
     updateHud: func {
-        camPosText setValue("camera pos: %s", camPos _)
-        mousePosText setValue("mouse pos: %s", handPos() _)
     }
 
     updateCamera: func {
