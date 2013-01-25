@@ -189,10 +189,17 @@ listDefs: func (path: String) -> List<String> {
 
 BoundingBox: class {
 
-    contains?: static func ~rect (pos, size, needle: Vec2) -> Bool {
-        halfSize := size mul(0.5)
-        topLeft     := pos sub(halfSize)
-        bottomRight := pos add(halfSize)
+    contains?: static func ~rect (pos, size, needle: Vec2, center := true) -> Bool {
+        topLeft, bottomRight: Vec2
+
+        if (center) {
+            halfSize := size mul(0.5)
+            topLeft     = pos sub(halfSize)
+            bottomRight = pos add(halfSize)
+        } else {
+            topLeft     = pos
+            bottomRight = pos add(size)
+        }
 
         (
             (needle x >= topLeft x) &&

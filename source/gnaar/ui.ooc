@@ -16,26 +16,11 @@ use sdl2
 import sdl2/[Core, Event]
 
 // internal
-import gnaar/[dialogs, events]
+import gnaar/[dialogs, events, utils]
 
-FloatFlavor: enum {
-    NONE
-    LEFT
-    RIGHT
-    INHERIT
-}
-
-// FIXME: workaround: ABSOLUTE and RELATIVE
-// are broked on MinGW. Don't ask, but the
-// correct fix is to make rock prefix.
-// On the other hand, that'll break most bindings.
-// Yay?
 PositionFlavor: enum {
     STATIC
-    //ABSOLUTE
     FIXED
-    //RELATIVE
-    INHERIT
     CENTER
 }
 
@@ -43,14 +28,12 @@ SizeFlavor: enum {
     AUTO
     LENGTH /* e.g. 12px */
     PERCENTAGE /* e.g. 33% */
-    INHERIT
 
     toString: func -> String {
         match this {
             case This AUTO => "auto"
             case This LENGTH => "length"
             case This PERCENTAGE => "percentage"
-            case This INHERIT => "inherit"
         }
     }
 }
@@ -66,7 +49,6 @@ Widget: class extends GlDrawable {
     // can be null
     parent: Panel
 
-    floating := FloatFlavor NONE
     position := PositionFlavor STATIC
     width := SizeFlavor AUTO
     height := SizeFlavor AUTO
@@ -78,6 +60,7 @@ Widget: class extends GlDrawable {
     // computed size, will be invalid if dirty
     size := vec2(0, 0)
 
+    hovered := false
     visible := true
 
     // if true, need a repack before display
@@ -132,6 +115,19 @@ Widget: class extends GlDrawable {
 
     setPositionFlavor: func (=position)
 
+    process: func (e: GEvent) {
+        // do what you want!
+        "Widget %s got event %s" printfln(class name, e getName())
+    }
+
+    collideTree: func (needle: Vec2, cb: Func (Widget, Bool)) {
+        cb(this, contains?(needle))
+    }
+
+    contains?: func (needle: Vec2) -> Bool {
+        BoundingBox contains?(pos, size, needle, false)
+    }
+
 }
 
 Panel: class extends Widget {
@@ -152,6 +148,15 @@ Panel: class extends Widget {
         children add(widget)
         widget parent = this
         touch()
+    }
+
+    collideTree: func (needle: Vec2, cb: Func (Widget, Bool)) {
+        super(needle, cb)
+
+        subNeedle := needle sub(pos)
+        for (child in children) {
+            child collideTree(subNeedle, cb)
+        }
     }
 
     draw: func (dye: DyeContext) {
@@ -278,7 +283,7 @@ Label: class extends Widget {
     margin := vec2(0, 0)
     _text: GlText
 
-    color := Color black()
+    color := Color new(220, 220, 220)
 
     init: func (value: String, fontSize := 20) {
         _text = GlText new(Frame fontPath, value, fontSize)
@@ -299,8 +304,23 @@ Label: class extends Widget {
     }
 
     draw: func (dye: DyeContext) {
-        _text pos set!(pos add(margin) sub(0, size y))
-        _text draw(dye)
+        _text pos set!(adjustedPos())
+
+        if (hovered) {
+            _text color = color
+        } else {
+            _text color = color mul(0.7)
+        }
+
+        _text render(dye)
+    }
+
+    contains?: func (needle: Vec2) -> Bool {
+        BoundingBox contains?(adjustedPos(), size, needle, false)
+    }
+
+    adjustedPos: func -> Vec2 {
+        pos add(margin) sub(0, size y)
     }
 
     repack: func {
@@ -400,6 +420,20 @@ Frame: class extends Panel {
         }
 
         prevMousePos set!(mousePos)
+
+        collideTree(mousePos, |widget, touching| {
+            if (touching) {
+                if (!widget hovered) {
+                    widget hovered = true
+                    widget process(MouseLeaveEvent new(mousePos))
+                }
+            } else {
+                if (widget hovered) {
+                    widget hovered = false
+                    widget process(MouseEnterEvent new(mousePos))
+                }
+            }
+        })
     }
 
     initEvents: func {
@@ -415,7 +449,17 @@ Frame: class extends Panel {
                 dragging = false
                 queue push(DragStopEvent new())
             } else {
-                queue push(ClickEvent new(MouseButton LEFT, input getMousePos()))
+                clickPos := input getMousePos()
+                clickEvent := ClickEvent new(MouseButton LEFT, clickPos)
+
+                logger info("Click at %s", clickPos _)
+                collideTree(clickPos, |widget, touching|
+                    if (touching) {
+                        widget process(clickEvent)
+                    }
+                )
+
+                queue push(clickEvent)
             }
         )
 
@@ -430,6 +474,8 @@ Frame: class extends Panel {
 
     draw: func (dye: DyeContext) {
         group draw(dye)
+
+        // draw children
         super(dye)
     }
 
