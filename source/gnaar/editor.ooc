@@ -48,6 +48,7 @@ Editor: class extends LevelBase {
 
     init: func (scene: Scene, =factory) {
         frame = Frame new(scene)
+        frame margin set!(5, 5)
         frame padding set!(10, 10)
         input = frame input
 
@@ -73,12 +74,15 @@ Editor: class extends LevelBase {
 
     initHud: func {
         camPosText = Label new("camera pos")
+        camPosText color set!(30, 30, 30)
         frame add(camPosText)
 
         mousePosText = Label new("camera pos")
+        mousePosText color set!(30, 30, 30)
         frame add(mousePosText)
 
         activeLayerText = Label new("active layer: <unknown>")
+        activeLayerText color set!(30, 30, 30)
         activeLayerText setDisplayFlavor(DisplayFlavor BLOCK)
         frame add(activeLayerText)
     }

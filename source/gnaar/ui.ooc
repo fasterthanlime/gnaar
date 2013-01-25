@@ -285,7 +285,7 @@ Label: class extends Widget {
 
     color := Color new(220, 220, 220)
 
-    init: func (value: String, fontSize := 20) {
+    init: func (value: String, fontSize := 30) {
         _text = GlText new(Frame fontPath, value, fontSize)
         _text pos set!(0, 0)
         repack()
@@ -304,6 +304,7 @@ Label: class extends Widget {
     }
 
     draw: func (dye: DyeContext) {
+        _text color set!(color)
         _text pos set!(adjustedPos())
         _text render(dye)
     }
