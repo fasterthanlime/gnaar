@@ -1,13 +1,14 @@
 
-// libs
+// our stuff
+import gnaar/[dialogs, events, utils]
+
+// third-party stuff
 use glew
 import glew
 
 use dye
 import dye/[core, input, sprite, text, math, primitives]
-
 import math
-import structs/[ArrayList, Stack, List]
 
 use deadlogger
 import deadlogger/[Log, Logger]
@@ -15,34 +16,8 @@ import deadlogger/[Log, Logger]
 use sdl2
 import sdl2/[Core, Event]
 
-// internal
-import gnaar/[dialogs, events, utils]
-
-PositionFlavor: enum {
-    STATIC
-    FIXED
-    CENTER
-}
-
-SizeFlavor: enum {
-    AUTO
-    LENGTH /* e.g. 12px */
-    PERCENTAGE /* e.g. 33% */
-
-    toString: func -> String {
-        match this {
-            case This AUTO => "auto"
-            case This LENGTH => "length"
-            case This PERCENTAGE => "percentage"
-        }
-    }
-}
-
-DisplayFlavor: enum {
-    INLINE
-    BLOCK
-    INLINEBLOCK
-}
+// sdk stuff
+import structs/[ArrayList, Stack, List]
 
 Widget: class extends GlDrawable {
 
@@ -63,7 +38,7 @@ Widget: class extends GlDrawable {
     hovered := false
     visible := true
 
-    // if true, need a repack before display
+    // if true, need a layout before display
     dirty := false
 
     draw: func (dye: DyeContext) {
@@ -72,6 +47,17 @@ Widget: class extends GlDrawable {
 
     touch: func {
         dirty = true
+    }
+
+    layout: func {
+    }
+
+    getDepth: func -> Int {
+        if (parent) {
+            parent getDepth() + 1
+        } else {
+            0
+        }
     }
 
     setWidth: func ~length (value: Float) {
@@ -133,6 +119,26 @@ Widget: class extends GlDrawable {
         BoundingBox contains?(pos, size, needle, false)
     }
 
+    getParentWidth: func -> Float {
+        if (!parent) {
+            0
+        } else if (parent width == SizeFlavor AUTO) {
+            parent getParentWidth()
+        } else {
+            parent size x
+        }
+    }
+
+    getParentHeight: func -> Float {
+        if (!parent) {
+            0
+        } else if (parent width == SizeFlavor AUTO) {
+            parent getParentHeight()
+        } else {
+            parent size y
+        }
+    }
+
 }
 
 Panel: class extends Widget {
@@ -168,7 +174,7 @@ Panel: class extends Widget {
         if (!visible) return
 
         if (dirty) {
-            repack()
+            layout()
         }
 
         glPushMatrix()
@@ -192,41 +198,72 @@ Panel: class extends Widget {
         backgroundColorRect color set!(color)
     }
 
-    resize: func {
+    preLayoutSize: func {
         match width {
             case SizeFlavor LENGTH =>
                 size x = givenSize x
+                logger info("(%02d) Width of %s inferred to %f", getDepth(), class name, size x)
             case SizeFlavor PERCENTAGE =>
                 if (!parent) {
                     Exception new("Percentage-sized width with no parent") throw()
                 }
 
-                size x = parent size x * (givenSize x * 0.01)
-            case =>
-                //Exception new("Unsupported size flavor: %d" format(width)) throw()
+                size x = getParentWidth() * (givenSize x * 0.01)
+                logger info("(%02d) Width of %s inferred to %f", getDepth(), class name, size x)
         }
 
         match height {
             case SizeFlavor LENGTH =>
                 size y = givenSize y
+                logger info("(%02d) Height of %s inferred to %f", getDepth(), class name, size y)
             case SizeFlavor PERCENTAGE =>
                 if (!parent) {
                     Exception new("Percentage-sized height with no parent") throw()
                 }
 
-                size y = parent size y * (givenSize y * 0.01)
-            case =>
-                //Exception new("Unsupported size flavor: %d" format(height)) throw()
+                size y = getParentHeight() * (givenSize y * 0.01)
+                logger info("(%02d) Height of %s inferred to %f", getDepth(), class name, size y)
         }
     }
 
-    repack: func {
-        logger info("Resizing, width = %s, height = %s, givenSize = %s",
-            width toString(), height toString(), givenSize _)
-        resize()
-        logger info("Resized to %s", size _)
+    postLayoutSize: func {
+        match width {
+            case SizeFlavor AUTO =>
+                // TODO: this is terribad
+                size x = 0
+                first := true
+                for (child in children) {
+                    if (first) {
+                        first = false
+                    } else {
+                        size x += padding x
+                    }
+                    size x += child size x
+                }
+                logger info("(%02d) Width of %s inferred to %f", getDepth(), class name, size x)
+        }
 
-        logger info("Repacking with %d children", children size)
+        match height {
+            case SizeFlavor AUTO =>
+                // TODO: this is terribad
+                size y = 0
+                for (child in children) {
+                    logger info("size y = %.2f, child size y = %.2f", size y, child size y)
+                    if (child size y > size y) {
+                        size y = child size y
+                    }
+                }
+                logger info("(%02d) Height of %s inferred to %f", getDepth(), class name, size y)
+        }
+
+    }
+
+    layout: func {
+        logger info("(%02d) Packing %s - %p", getDepth(), class name, this)
+        preLayoutSize()
+        for (child in children) {
+            child layout()
+        }
 
         baseX := margin x
         baseY := size y - margin y
@@ -262,11 +299,11 @@ Panel: class extends Widget {
 
                 // ----------------------------------
                 case PositionFlavor STATIC =>
-                    logger info(" - static, (%.2f, %.2f)", x, y)
-
                     if (child display == DisplayFlavor BLOCK) {
                         y -= child size y
                     }
+
+                    logger info(" - static, (%.2f, %.2f)", x, y)
                     child pos set!(x, y)
 
                 // ----------------------------------
@@ -285,12 +322,30 @@ Panel: class extends Widget {
 
             previousChild = child
         }
+        postLayoutSize()
 
         dirty = false
+    }
 
-        if (parent) {
-            parent repack()
-        }
+}
+
+Icon: class extends Widget {
+
+    _sprite: GlSprite
+
+    init: func (path: String) {
+        _sprite = GlSprite new(path)
+        _sprite center = false
+        layout()
+    }
+
+    draw: func (dye: DyeContext) {
+        _sprite pos set!(pos)
+        _sprite render(dye)
+    }
+
+    layout: func {
+        size set!(_sprite size)
     }
 
 }
@@ -303,13 +358,12 @@ Label: class extends Widget {
 
     init: func (value: String, fontSize := 30) {
         _text = GlText new(Frame fontPath, value, fontSize)
-        _text pos set!(0, 0)
-        repack()
+        layout()
     }
 
     setValue: func (value: String) {
         _text value = value
-        repack()
+        layout()
         if (parent) {
             parent touch()
         }
@@ -325,7 +379,7 @@ Label: class extends Widget {
         _text render(dye)
     }
 
-    repack: func {
+    layout: func {
         size set!(_text size)
     }
 
@@ -487,3 +541,29 @@ Frame: class extends Panel {
 
 }
                 
+PositionFlavor: enum {
+    STATIC
+    FIXED
+    CENTER
+}
+
+SizeFlavor: enum {
+    AUTO
+    LENGTH /* e.g. 12px */
+    PERCENTAGE /* e.g. 33% */
+
+    toString: func -> String {
+        match this {
+            case This AUTO => "auto"
+            case This LENGTH => "length"
+            case This PERCENTAGE => "percentage"
+        }
+    }
+}
+
+DisplayFlavor: enum {
+    INLINE
+    BLOCK
+    INLINEBLOCK
+}
+
