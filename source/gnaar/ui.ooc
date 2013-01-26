@@ -8,7 +8,6 @@ import glew
 
 use dye
 import dye/[core, input, sprite, text, math, primitives]
-import math
 
 use deadlogger
 import deadlogger/[Log, Logger]
@@ -16,10 +15,17 @@ import deadlogger/[Log, Logger]
 use sdl2
 import sdl2/[Core, Event]
 
+use yaml
+import yaml/[Document]
+
 // sdk stuff
-import structs/[ArrayList, Stack, List]
+import structs/[ArrayList, Stack, List, HashMap]
+import math
 
 Widget: class extends GlDrawable {
+
+    // can be null
+    id := ""
 
     // can be null
     parent: Panel
@@ -137,6 +143,40 @@ Widget: class extends GlDrawable {
         } else {
             parent size y
         }
+    }
+
+    absorb: func (props: HashMap<String, DocumentNode>) {
+        props each(|k, v|
+            match k {
+                case "width" =>
+                    parseSize(v toScalar(), |flavor, value|
+                        width = flavor
+                        givenSize x = value
+                    )
+
+                case "height" =>
+                    parseSize(v toScalar(), |flavor, value|
+                        height = flavor
+                        givenSize y = value
+                    )
+
+                case "position" =>
+                    parsePosition
+            }
+        )
+    }
+
+    parseSize: func (value: String, f: Func (SizeFlavor, Float)) {
+        if (value == "auto") {
+            f(SizeFlavor AUTO, 0)
+        } else if (value endsWith?("%")) {
+            f(SizeFlavor PERCENTAGE, value trim("%") toInt())
+        } else {
+            f(SizeFlavor LENGTH, value toInt())
+        }
+    }
+
+    parsePosition: func (value: String) {
     }
 
 }
@@ -327,25 +367,61 @@ Panel: class extends Widget {
         dirty = false
     }
 
+    absorb: func (props: HashMap<String, DocumentNode>) {
+        super(props)
+
+        props each(|k, v|
+            match k {
+                case "margin" =>
+                    margin set!(v toVec2())
+
+                case "padding" =>
+                    padding set!(v toVec2())
+            }
+        )
+    }
+
 }
 
 Icon: class extends Widget {
 
     _sprite: GlSprite
 
-    init: func (path: String) {
-        _sprite = GlSprite new(path)
-        _sprite center = false
-        layout()
+    init: func { }
+
+    init: func ~withSource (src: String) {
+        this src = src
+    }
+
+    src: String {
+        get {}
+        set (=src) {
+            _sprite = GlSprite new(src)
+            _sprite center = false
+            layout()
+        }
     }
 
     draw: func (dye: DyeContext) {
+        if (!_sprite) { return }
         _sprite pos set!(pos)
         _sprite render(dye)
     }
 
     layout: func {
+        if (!_sprite) { return }
         size set!(_sprite size)
+    }
+
+    absorb: func (props: HashMap<String, DocumentNode>) {
+        super(props)
+
+        props each(|k, v|
+            match k {
+                case "src" =>
+                    src = v toScalar()
+            }
+        )
     }
 
 }
@@ -356,21 +432,53 @@ Label: class extends Widget {
 
     color := Color new(220, 220, 220)
 
-    init: func (value: String, fontSize := 30) {
+    init: func (value := "", fontSize := 30) {
+        this fontPath = Frame fontPath
+        this value = value
+        this fontSize = fontSize
+
         _text = GlText new(Frame fontPath, value, fontSize)
+
         layout()
     }
 
-    setValue: func (value: String) {
-        _text value = value
-        layout()
-        if (parent) {
-            parent touch()
+    fontSize: Int {
+        get
+        set (=fontSize) {
+            if (!_text) { return }
+
+            _reload()
+        }
+    }
+
+    fontPath: String {
+        get
+        set (=fontPath) {
+            if (!_text) { return }
+
+            _reload()
+        }
+    }
+
+    value: String {
+        get
+        set (=value) {
+            if (!_text) { return }
+
+            _text value = value
+            layout()
+            if (parent) {
+                parent touch()
+            }
         }
     }
 
     setValue: func ~var (value: String, args: ...) {
-        setValue(value format(args))
+        this value = value format(args)
+    }
+
+    _reload: func {
+        _text = GlText new(fontPath, _text value, fontSize)
     }
 
     draw: func (dye: DyeContext) {
@@ -384,6 +492,47 @@ Label: class extends Widget {
     }
 
 }
+
+Button: class extends Label {
+
+    callback: ActionCallback
+    baseColor := Color new(220, 220, 220)
+
+    init: super func
+
+    draw: func (dye: DyeContext) {
+        if (hovered) {
+            color set!(baseColor)
+        } else {
+            color set!(baseColor mul(0.7))
+        }
+
+        super(dye)
+    }
+
+    onClick: func (f: Func (String, Widget)) {
+        callback = ActionCallback new(f)
+    }
+
+    process: func (e: GEvent) {
+        if (!callback) {
+            return
+        }
+
+        match e {
+            case ce: ClickEvent =>
+                callback f(id, this) 
+        }
+    }
+
+}
+
+ActionCallback: class {
+    f: Func (String, Widget)
+
+    init: func (=f) {}
+}
+
 
 Frame: class extends Panel {
 
