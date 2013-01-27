@@ -206,6 +206,24 @@ Widget: class extends GlDrawable {
         }
     }
 
+    find: func (needle: String) -> Widget {
+        if (id == needle) {
+            return this
+        }
+
+        null
+    }
+
+    find: func ~withType <T> (needle: String, T: Class) -> T {
+        result := find(needle)
+
+        if (result && result instanceOf?(T)) {
+            return result
+        }
+
+        null
+    }
+
 }
 
 Panel: class extends Widget {
@@ -397,6 +415,22 @@ Panel: class extends Widget {
                     setBackgroundColor(parseColor(v))
             }
         )
+    }
+
+    find: func (needle: String) -> Widget {
+        result := super(needle)
+        if (result) {
+            return result
+        }
+
+        for (child in children) {
+            result = child find(needle)
+            if (result) {
+                return result
+            }
+        }
+
+        null
     }
 
 }
