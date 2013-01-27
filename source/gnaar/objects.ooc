@@ -36,7 +36,6 @@ LayerBase: abstract class {
     name: String
 
     init: func (=level, =name) {
-        "Created layer %s" printfln(name)
     }
 
     spawn: abstract func (family: String, name: String, pos: Vec2) -> GnObject

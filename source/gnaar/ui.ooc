@@ -269,34 +269,29 @@ Panel: class extends Widget {
         match width {
             case SizeFlavor LENGTH =>
                 size x = givenSize x
-                logger info("(%02d) Width of %s inferred to %f", getDepth(), class name, size x)
             case SizeFlavor PERCENTAGE =>
                 if (!parent) {
                     Exception new("Percentage-sized width with no parent") throw()
                 }
 
                 size x = getParentWidth() * (givenSize x * 0.01)
-                logger info("(%02d) Width of %s inferred to %f", getDepth(), class name, size x)
         }
 
         match height {
             case SizeFlavor LENGTH =>
                 size y = givenSize y
-                logger info("(%02d) Height of %s inferred to %f", getDepth(), class name, size y)
             case SizeFlavor PERCENTAGE =>
                 if (!parent) {
                     Exception new("Percentage-sized height with no parent") throw()
                 }
 
                 size y = getParentHeight() * (givenSize y * 0.01)
-                logger info("(%02d) Height of %s inferred to %f", getDepth(), class name, size y)
         }
     }
 
     postLayoutSize: func {
         match width {
             case SizeFlavor AUTO =>
-                // TODO: this is terribad
                 size x = 0
                 first := true
                 for (child in children) {
@@ -307,26 +302,26 @@ Panel: class extends Widget {
                     }
                     size x += child size x
                 }
-                logger info("(%02d) Width of %s inferred to %f", getDepth(), class name, size x)
+                logger debug("(%02d) Width of %s inferred to %f",
+                        getDepth(), class name, size x)
         }
 
         match height {
             case SizeFlavor AUTO =>
-                // TODO: this is terribad
                 size y = 0
                 for (child in children) {
-                    logger info("size y = %.2f, child size y = %.2f", size y, child size y)
                     if (child size y > size y) {
                         size y = child size y
                     }
                 }
-                logger info("(%02d) Height of %s inferred to %f", getDepth(), class name, size y)
+                logger debug("(%02d) Height of %s inferred to %f",
+                        getDepth(), class name, size y)
         }
 
     }
 
     layout: func {
-        logger info("(%02d) Packing %s - %p", getDepth(), class name, this)
+        logger debug("(%02d) Packing %s - %p", getDepth(), class name, this)
         preLayoutSize()
         for (child in children) {
             child layout()
@@ -356,12 +351,7 @@ Panel: class extends Widget {
                 // ----------------------------------
                 case PositionFlavor CENTER =>
                     halfChildSize := child size mul(0.5)
-
-                    logger info("centering, halfSize = %s, halfChildSize = %s",
-                        size mul(0.5) _, halfChildSize _)
-
                     newpos := size mul(0.5) sub(halfChildSize)
-                    logger info(" - center, (%.2f, %.2f)", newpos x, newpos y)
                     child pos set!(newpos)
 
                 // ----------------------------------
@@ -369,8 +359,6 @@ Panel: class extends Widget {
                     if (child display == DisplayFlavor BLOCK) {
                         y -= child size y
                     }
-
-                    logger info(" - static, (%.2f, %.2f)", x, y)
                     child pos set!(x, y)
 
                 // ----------------------------------
@@ -514,7 +502,6 @@ Label: class extends Widget {
     }
 
     _reload: func {
-        "Reloading, fontPath = %s, value = %s, fontSize = %d" printfln(fontPath, value, fontSize)
         _text = GlText new(fontPath, value, fontSize)
     }
 
@@ -616,6 +603,8 @@ Frame: class extends Panel {
 
         initEvents()
         prevMousePos set!(input getMousePos())
+
+        scene add(this)
     }
 
     push: func (dialog: Dialog) {
@@ -697,7 +686,6 @@ Frame: class extends Panel {
                 clickPos := input getMousePos()
                 clickEvent := ClickEvent new(MouseButton LEFT, clickPos)
 
-                logger info("Click at %s", clickPos _)
                 collideTree(clickPos, |widget, touching|
                     if (touching) {
                         widget process(clickEvent)

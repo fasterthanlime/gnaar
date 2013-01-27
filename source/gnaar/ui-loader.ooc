@@ -28,6 +28,12 @@ UILoader: class {
 
     load: func (frame: Frame, path: String) {
         doc := parseYaml(path)
+        if (!doc) {
+            logger error("Could not find UI interface file: %s", path)
+            return
+        }
+
+        logger info("Loading UI interface file: %s", path)
 
         doc toMap() each(|k, v|
             widget := parseWidget(k, v toMap())
@@ -47,7 +53,6 @@ UILoader: class {
 
         id := def[0..l]
         type := def[(l + 1)..r]
-        logger info("Got widget: %s(%s)", id, type)
 
         props := HashMap<String, DocumentNode> new()
         children := ArrayList<Widget> new()
