@@ -148,12 +148,14 @@ Editor: class extends LevelBase {
 
             match (kev scancode) {
                 case KeyCode ESC =>
+                    kev consume()
                     closeEditor()
                 case KeyCode F1 =>
                     frame push(InputDialog new(frame, "Enter level path to load", |name|
                         loader := LevelLoader new(name, this)
                         if (!loader success) {
-                            frame push(AlertDialog new(frame, "Could not load level %s" format(name)))
+                            message := "Could not load level %s" format(name)
+                            frame push(AlertDialog new(frame, message))
                         }
                     ))
                 case KeyCode F2 =>
