@@ -215,11 +215,11 @@ Editor: class extends LevelBase {
             }
         )
 
-        input onMousePress(MouseButton MIDDLE, ||
+        input onMousePress(MouseButton MIDDLE, |ev|
             draggingCam = true
         )
 
-        input onMouseRelease(MouseButton MIDDLE, ||
+        input onMouseRelease(MouseButton MIDDLE, |ev|
             draggingCam = false
         )
     }

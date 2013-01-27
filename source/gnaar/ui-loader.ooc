@@ -1,7 +1,4 @@
 
-// our stuff
-import gnaar/[utils, ui]
-
 // third-party stuff
 use dye
 import dye/[core]
@@ -9,18 +6,30 @@ import dye/[core]
 use yaml
 import yaml/[Parser, Document]
 
+use deadlogger
+import deadlogger/[Log, Logger]
+
+// sdk stuff
+import structs/[ArrayList, HashMap]
+
+// our stuff
+import gnaar/[utils, ui]
+
 UILoader: class {
 
     root: Frame
 
-    init: func (factory: UIFactory) {
+    logger := Log getLogger(This name)
+    factory: UIFactory
+
+    init: func (=factory) {
 
     }
 
-    parse: func (path: String, frame: Frame) {
+    load: func (frame: Frame, path: String) {
         doc := parseYaml(path)
 
-        doc toMap each(|k, v|
+        doc toMap() each(|k, v|
             widget := parseWidget(k, v toMap())
             if (widget) {
                 frame add(widget)
@@ -29,29 +38,46 @@ UILoader: class {
     }
 
     parseWidget: func (def: String, map: HashMap<String, DocumentNode>) -> Widget {
-        l := def indexOf?("(")
-        r := def indexOf?(")")
+        l := def indexOf('(')
+        r := def indexOf(')')
         if (l == -1 || r == -1 || l > r) {
-            logger error("Invalid widget definition: %s"
+            logger error("Invalid widget definition: %s" format(def))
             return null
         }
 
         id := def[0..l]
-        type := def[l..r]
-        "Got widget: %s(%s)" printfln(id, type)
+        type := def[(l + 1)..r]
+        logger info("Got widget: %s(%s)", id, type)
 
         props := HashMap<String, DocumentNode> new()
         children := ArrayList<Widget> new()
 
         map each(|k, v|
             if (k contains?("(")) {
-                children add(parseWidget(k, v toMap()))
+                child := parseWidget(k, v toMap())
+                if (child) {
+                    children add(child)
+                }
             } else {
                 props put(k, v)
             }
         )
 
         widget := factory spawn(type, props)
+        widget id = id
+
+        match widget {
+            case panel: Panel =>
+                for (child in children) {
+                    panel add(child)
+                }
+            case =>
+                if (!children empty?()) {
+                    logger error("Non-container widget has children: %s", widget class name)
+                }
+        }
+
+        widget
     }
 
 }
@@ -59,7 +85,7 @@ UILoader: class {
 UIFactory: class {
     
     spawn: func (type: String, props: HashMap<String, DocumentNode>) -> Widget {
-        widget := match type {
+        widget: Widget = match type {
             case "panel" =>
                 Panel new()
             case "label" =>
@@ -70,9 +96,13 @@ UIFactory: class {
                 Icon new()
             case =>
                 UILoaderException new("Unknown widget type: %s" format(type)) throw()
+                null
         }
 
-        widget absorb(factory, props)
+        if (widget) {
+            widget absorb(props)
+        }
+
         widget
     }
 

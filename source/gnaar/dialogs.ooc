@@ -133,7 +133,7 @@ AlertDialog: class extends Dialog {
             cb()
         )
 
-        input onMouseRelease(MouseButton LEFT, ||
+        input onMouseRelease(MouseButton LEFT, |ev|
             destroy()
             cb()
         )

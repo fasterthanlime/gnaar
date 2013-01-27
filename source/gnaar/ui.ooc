@@ -161,7 +161,10 @@ Widget: class extends GlDrawable {
                     )
 
                 case "position" =>
-                    parsePosition
+                    position = parsePosition(v toScalar())
+
+                case "display" =>
+                    display = parseDisplay(v toScalar())
             }
         )
     }
@@ -176,7 +179,31 @@ Widget: class extends GlDrawable {
         }
     }
 
-    parsePosition: func (value: String) {
+    parsePosition: func (value: String) -> PositionFlavor {
+        match value {
+            case "static" => PositionFlavor STATIC
+            case "fixed"  => PositionFlavor FIXED
+            case "center" => PositionFlavor CENTER
+        }
+    }
+
+    parseDisplay: func (value: String) -> DisplayFlavor {
+        match value {
+            case "inline"       => DisplayFlavor INLINE
+            case "block"        => DisplayFlavor BLOCK
+            case "inline-block" => DisplayFlavor INLINEBLOCK
+        }
+    }
+
+    parseColor: func (value: DocumentNode) -> Color {
+        values := value toList() map(|v| v toInt())
+        Color new(values get(0), values get(1), values get(2))
+    }
+
+    bubbleAction: func (action: Action) {
+        if (parent) {
+            parent bubbleAction(action)
+        }
     }
 
 }
@@ -377,6 +404,9 @@ Panel: class extends Widget {
 
                 case "padding" =>
                     padding set!(v toVec2())
+
+                case "background" =>
+                    setBackgroundColor(parseColor(v))
             }
         )
     }
@@ -437,14 +467,16 @@ Label: class extends Widget {
         this value = value
         this fontSize = fontSize
 
-        _text = GlText new(Frame fontPath, value, fontSize)
+        _text = GlText new(fontPath, value, fontSize)
 
         layout()
     }
 
     fontSize: Int {
         get
-        set (=fontSize) {
+        set (_fontSize) {
+            fontSize = _fontSize
+
             if (!_text) { return }
 
             _reload()
@@ -453,7 +485,9 @@ Label: class extends Widget {
 
     fontPath: String {
         get
-        set (=fontPath) {
+        set (_fontPath) {
+            fontPath = _fontPath
+
             if (!_text) { return }
 
             _reload()
@@ -462,7 +496,9 @@ Label: class extends Widget {
 
     value: String {
         get
-        set (=value) {
+        set (_value) {
+            value = _value
+
             if (!_text) { return }
 
             _text value = value
@@ -478,7 +514,8 @@ Label: class extends Widget {
     }
 
     _reload: func {
-        _text = GlText new(fontPath, _text value, fontSize)
+        "Reloading, fontPath = %s, value = %s, fontSize = %d" printfln(fontPath, value, fontSize)
+        _text = GlText new(fontPath, value, fontSize)
     }
 
     draw: func (dye: DyeContext) {
@@ -489,6 +526,20 @@ Label: class extends Widget {
 
     layout: func {
         size set!(_text size)
+    }
+
+    absorb: func (props: HashMap<String, DocumentNode>) {
+        super(props)
+
+        props each(|k, v|
+            match k {
+                case "value" =>
+                    value = v toScalar()
+
+                case "font-size" =>
+                    fontSize = v toInt()
+            }
+        )
     }
 
 }
@@ -510,27 +561,13 @@ Button: class extends Label {
         super(dye)
     }
 
-    onClick: func (f: Func (String, Widget)) {
-        callback = ActionCallback new(f)
-    }
-
     process: func (e: GEvent) {
-        if (!callback) {
-            return
-        }
-
         match e {
             case ce: ClickEvent =>
-                callback f(id, this) 
+                bubbleAction(Action new(id, this))
         }
     }
 
-}
-
-ActionCallback: class {
-    f: Func (String, Widget)
-
-    init: func (=f) {}
 }
 
 
@@ -645,13 +682,13 @@ Frame: class extends Panel {
     }
 
     initEvents: func {
-        input onMousePress(MouseButton LEFT, ||
+        input onMousePress(MouseButton LEFT, |ev|
             dragStart = true
             dragPath = vec2(0, 0)
             dragging = false
         )
 
-        input onMouseRelease(MouseButton LEFT, ||
+        input onMouseRelease(MouseButton LEFT, |ev|
             dragStart = false
             if (dragging) {
                 dragging = false
@@ -671,11 +708,11 @@ Frame: class extends Panel {
             }
         )
 
-        input onMouseRelease(MouseButton MIDDLE, ||
+        input onMouseRelease(MouseButton MIDDLE, |ev|
             queue push(ClickEvent new(MouseButton MIDDLE, input getMousePos()))
         )
 
-        input onMouseRelease(MouseButton RIGHT, ||
+        input onMouseRelease(MouseButton RIGHT, |ev|
             queue push(ClickEvent new(MouseButton RIGHT, input getMousePos()))
         )
     }
@@ -688,6 +725,33 @@ Frame: class extends Panel {
         group draw(dye)
     }
 
+    /* Action handling */
+
+    actionCallbacks := ArrayList<ActionCallback> new()
+
+    bubbleAction: func (action: Action) {
+        for (cb in actionCallbacks) {
+            cb f(action)
+        }
+    }
+
+    onAction: func (f: Func (Action)) {
+        actionCallbacks add(ActionCallback new(f))
+    }
+
+}
+
+Action: class {
+    id: String
+    origin: Widget
+
+    init: func (=id, =origin)
+}
+
+ActionCallback: class {
+    f: Func (Action)
+
+    init: func (=f) {}
 }
                 
 PositionFlavor: enum {
