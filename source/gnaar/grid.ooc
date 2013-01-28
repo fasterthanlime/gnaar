@@ -48,6 +48,13 @@ SparseGrid: class <T> {
         }
     }
 
+    clear: func {
+        rows each(|k, row|
+            row clear()
+        )
+        rows clear()
+    }
+
 }
 
 GridNotificationListener: class <T> {
@@ -79,6 +86,10 @@ Row: class <T> {
             obj
         }
         obj
+    }
+
+    clear: func {
+        cols clear()
     }
 
 }
