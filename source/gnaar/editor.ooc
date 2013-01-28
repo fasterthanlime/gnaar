@@ -42,6 +42,7 @@ Editor: class extends LevelBase {
     listener: EditorEventListener
 
     activeLayerText: Label
+    currentName: String = null
 
     running := true
 
@@ -88,7 +89,6 @@ Editor: class extends LevelBase {
     }
 
     closeEditor: func {
-        // TODO: ask if dirty level should be saved
         running = false
     }
 
@@ -150,18 +150,26 @@ Editor: class extends LevelBase {
                 case KeyCode ESC =>
                     kev consume()
                     closeEditor()
-                case KeyCode F1 =>
+                case KeyCode O =>
                     frame push(InputDialog new(frame, "Enter level path to load", |name|
                         loader := LevelLoader new(name, this)
-                        if (!loader success) {
+                        if (loader success) {
+                            currentName = name
+                        } else {
                             message := "Could not load level %s" format(name)
                             frame push(AlertDialog new(frame, message))
                         }
                     ))
-                case KeyCode F2 =>
-                    frame push(InputDialog new(frame, "Enter level path to save", |name|
-                        LevelSaver new(name, this)
-                    ))
+                case KeyCode S =>
+                    if (currentName) {
+                        LevelSaver new(currentName, this)
+                        message := "Saved level %s" format(currentName)
+                        frame push(AlertDialog new(frame, message))
+                    } else {
+                        frame push(InputDialog new(frame, "Enter level path to save", |name|
+                            LevelSaver new(name, this)
+                        ))
+                    }
                 case KeyCode KP0 =>
                     camPos set!(0, 0)
                 case KeyCode KP4 =>
