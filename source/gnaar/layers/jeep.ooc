@@ -16,7 +16,7 @@ use yaml
 import yaml/[Parser, Document]
 
 /* internal */
-import gnaar/[editor, ui, loader, saver, dialogs, objects, utils]
+import gnaar/[editor, ui, loader, saver, dialogs, objects, utils, grid]
 
 JeepFactory: class extends ObjectFactory {
 
@@ -37,15 +37,22 @@ JeepFactory: class extends ObjectFactory {
 
 JeepLayer: class extends EditorLayer {
 
-    gridSize := 64
+    gridSize: Int
 
     current := vec2i(0, 0)
 
-    grid := SparseGrid new()
+    grid := SparseGrid<JeepObject> new()
     currentName := "<none>"
 
-    init: func (.editor, .name) {
+    init: func (.editor, .name, gridSize := 64) {
         super(editor, name)
+
+        this gridSize = gridSize
+        grid onNotification(|obj|
+            if (obj) {
+                obj notify(this grid)
+            }
+        )
 
         addFactory(JeepFactory new(this))
     }
@@ -170,7 +177,7 @@ JeepLayer: class extends EditorLayer {
         grid rows each(|rowNum, row|
             g := f
             row cols each(|colNum, obj|
-                f(obj)
+                f(obj as EditorObject)
             )
         )
     }
@@ -214,68 +221,6 @@ JeepDefinition: class {
 
 }
 
-SparseGrid: class {
-    
-    rows := HashMap<Int, Row> new()
-
-    put: func (col, row: Int, obj: JeepObject) -> JeepObject {
-        getRow(row) put(col, obj)
-    }
-
-    remove: func (col, row: Int) -> JeepObject {
-        getRow(row) remove(col)
-    }
-
-    notify: func (col, row: Int) {
-        obj := get(col, row)
-        if (obj) {
-            obj notify(this)
-        }
-    }
-
-    get: func (col, row: Int) -> JeepObject {
-        getRow(row) get(col)
-    }
-
-    getRow: func (row: Int) -> Row {
-        if (rows contains?(row)) {
-            rows get(row)
-        } else {
-            obj := Row new()
-            rows put(row, obj)
-            obj
-        }
-    }
-
-}
-
-Row: class {
-
-    cols := HashMap<Int, JeepObject> new()
-
-    init: func {
-    }
-
-    put: func (col: Int, obj: JeepObject) -> JeepObject {
-        cols put(col, obj)
-        obj
-    }
-
-    get: func (col: Int) -> JeepObject {
-        cols get(col)
-    }
-
-    remove: func (col: Int) -> JeepObject {
-        obj := cols get(col)
-        if (obj) {
-            cols remove(col)
-            obj
-        }
-        obj
-    }
-
-}
-
 JeepObject: class extends EditorObject {
 
     side := 64
@@ -314,7 +259,7 @@ JeepObject: class extends EditorObject {
         posi = pos getColRow(side)
     }
 
-    notify: func (grid: SparseGrid) {
+    notify: func (grid: SparseGrid<JeepObject>) {
 
         bottom = (grid get(posi x, posi y - 1) != null)
         top    = (grid get(posi x, posi y + 1) != null)
