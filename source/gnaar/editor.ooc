@@ -48,7 +48,7 @@ Editor: class extends LevelBase {
 
     init: func (scene: Scene, =factory) {
         frame = Frame new(scene)
-        input = frame input
+        input = scene input
 
         listener = EditorEventListener new(this)
         frame queue subscribe(listener)
@@ -136,6 +136,45 @@ Editor: class extends LevelBase {
         frame givenSize mul(0.5)
     }
 
+    open: func ~path (name: String) -> Bool {
+        loader := LevelLoader new(name, this)
+        if (loader success) {
+            currentName = name
+        }
+        loader success
+    }
+
+    open: func {
+        frame push(InputDialog new(frame, "Enter level path to load", |name|
+            if (!open(name)) {
+                message := "Could not load level %s" format(name)
+                frame push(AlertDialog new(frame, message))
+            }
+        ))
+    }
+
+    saveAs: func {
+        frame push(InputDialog new(frame, "Enter level path to save", |name|
+            LevelSaver new(name, this)
+        ))
+    }
+
+    save: func {
+        if (currentName) {
+            LevelSaver new(currentName, this)
+            message := "Saved level %s" format(currentName)
+            frame push(AlertDialog new(frame, message))
+        } else {
+            saveAs()
+        }
+    }
+
+    createNew: func {
+        reset()
+        currentName = null
+        frame push(AlertDialog new(frame, "Here's a fresh level! Have fun :)"))
+    }
+
     /* Event handling */
 
     initEvents: func {
@@ -151,25 +190,11 @@ Editor: class extends LevelBase {
                     kev consume()
                     closeEditor()
                 case KeyCode O =>
-                    frame push(InputDialog new(frame, "Enter level path to load", |name|
-                        loader := LevelLoader new(name, this)
-                        if (loader success) {
-                            currentName = name
-                        } else {
-                            message := "Could not load level %s" format(name)
-                            frame push(AlertDialog new(frame, message))
-                        }
-                    ))
+                    open()
                 case KeyCode S =>
-                    if (currentName) {
-                        LevelSaver new(currentName, this)
-                        message := "Saved level %s" format(currentName)
-                        frame push(AlertDialog new(frame, message))
-                    } else {
-                        frame push(InputDialog new(frame, "Enter level path to save", |name|
-                            LevelSaver new(name, this)
-                        ))
-                    }
+                    save()
+                case KeyCode N =>
+                    createNew()
                 case KeyCode KP0 =>
                     camPos set!(0, 0)
                 case KeyCode KP4 =>
