@@ -3,9 +3,6 @@
 import gnaar/[dialogs, events, utils]
 
 // third-party stuff
-use glew
-import glew
-
 use dye
 import dye/[core, input, sprite, text, math, primitives]
 
@@ -13,7 +10,7 @@ use deadlogger
 import deadlogger/[Log, Logger]
 
 use sdl2
-import sdl2/[Core, Event]
+import sdl2/[Core, Event, OpenGL]
 
 use yaml
 import yaml/[Document]
