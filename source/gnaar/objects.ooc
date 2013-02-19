@@ -63,7 +63,6 @@ ObjectFactory: abstract class {
 
 EditorLayer: abstract class extends LayerBase {
 
-    name: String
     factories := HashMap<String, ObjectFactory> new()
 
     group: GlGroup
