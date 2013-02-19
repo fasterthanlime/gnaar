@@ -39,7 +39,6 @@ Widget: class extends GlDrawable {
     size := vec2(0, 0)
 
     hovered := false
-    visible := true
 
     // if true, need a layout before display
     dirty := false
