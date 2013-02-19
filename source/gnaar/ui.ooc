@@ -591,7 +591,9 @@ Button: class extends Label {
 Frame: class extends Panel {
 
     fontPath := static "assets/ttf/font.ttf"
-    logger := static Log getLogger(This name)
+
+    // FIXME: should rock allow redefinitions that are static?
+    //logger := static Log getLogger(This name)
 
     scene: Scene
     input: Input
