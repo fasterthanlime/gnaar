@@ -1,12 +1,9 @@
 
 use dye
-import dye/[core, loop, primitives, app]
+import dye/[core, primitives, app]
 
 use gnaar
 import gnaar/[ui]
-
-use deadlogger
-import deadlogger/[Log, Logger, Formatter, Handler, Filter, Level]
 
 main: func {
     UITest new() run(0.5)
