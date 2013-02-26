@@ -43,7 +43,7 @@ Widget: class extends GlDrawable {
     // if true, need a layout before display
     dirty := false
 
-    draw: func (dye: DyeContext) {
+    draw: func (dye: DyeContext, modelView: Matrix4) {
         // override stuff here
     }
 
@@ -251,7 +251,7 @@ Panel: class extends Widget {
         }
     }
 
-    draw: func (dye: DyeContext) {
+    draw: func (dye: DyeContext, modelView: Matrix4) {
         if (!visible) return
 
         if (dirty) {
@@ -262,11 +262,11 @@ Panel: class extends Widget {
         glTranslatef(pos x, pos y, 0)
         if (backgroundColorRect) {
             backgroundColorRect size set!(size)
-            backgroundColorRect draw(dye)
+            backgroundColorRect draw(dye, modelView)
         }
 
         for (c in children) {
-            c draw(dye)
+            c draw(dye, modelView)
         }
         glPopMatrix()
     }
@@ -450,10 +450,10 @@ Icon: class extends Widget {
         }
     }
 
-    draw: func (dye: DyeContext) {
+    draw: func (dye: DyeContext, modelView: Matrix4) {
         if (!_sprite) { return }
         _sprite pos set!(pos)
-        _sprite render(dye)
+        _sprite render(dye, modelView)
     }
 
     layout: func {
@@ -535,10 +535,10 @@ Label: class extends Widget {
         _text = GlText new(fontPath, value, fontSize)
     }
 
-    draw: func (dye: DyeContext) {
+    draw: func (dye: DyeContext, modelView: Matrix4) {
         _text color set!(color)
         _text pos set!(pos)
-        _text render(dye)
+        _text render(dye, modelView)
     }
 
     layout: func {
@@ -568,14 +568,14 @@ Button: class extends Label {
 
     init: super func
 
-    draw: func (dye: DyeContext) {
+    draw: func (dye: DyeContext, modelView: Matrix4) {
         if (hovered) {
             color set!(baseColor)
         } else {
             color set!(baseColor mul(0.7))
         }
 
-        super(dye)
+        super(dye, modelView)
     }
 
     process: func (e: GEvent) {
@@ -737,12 +737,12 @@ Frame: class extends Panel {
         )
     }
 
-    draw: func (dye: DyeContext) {
+    draw: func (dye: DyeContext, modelView: Matrix4) {
         // draw children
-        super(dye)
+        super(dye, modelView)
 
         // then draw rest: dialogs, etc.
-        group draw(dye)
+        group draw(dye, modelView)
     }
 
     /* Action handling */
