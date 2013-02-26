@@ -47,6 +47,12 @@ Widget: class extends GlDrawable {
         // override stuff here
     }
 
+    render: func (dye: DyeContext, modelView: Matrix4) {
+        // don't compute model view - children's positions have
+        // absolute coordinates
+        draw(dye, modelView)
+    }
+
     touch: func {
         dirty = true
     }
@@ -260,8 +266,18 @@ Panel: class extends Widget {
 
         if (backgroundColorRect) {
             backgroundColorRect pos set!(pos x, pos y - size y)
-            backgroundColorRect scale set!(size)
-            backgroundColorRect opacity = 0.1
+            
+            // comparing floats is a bad idea, except when
+            // you're setting them yourself
+            if (size x != backgroundColorRect size x ||
+                size y != backgroundColorRect size y) {
+                backgroundColorRect size set!(size)
+                backgroundColorRect rebuild()
+                logger debug("Rebuilding background color rect")
+            }
+
+
+            backgroundColorRect opacity = 0.5
             backgroundColorRect render(dye, inputModelView)
         }
 
@@ -272,7 +288,7 @@ Panel: class extends Widget {
 
     setBackgroundColor: func (color: Color) {
         if (!backgroundColorRect) {
-            backgroundColorRect = GlRectangle new(vec2(1, 1))
+            backgroundColorRect = GlRectangle new(size)
             backgroundColorRect center = false
         }
         backgroundColorRect color set!(color)
