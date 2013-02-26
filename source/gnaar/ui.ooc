@@ -251,29 +251,28 @@ Panel: class extends Widget {
         }
     }
 
-    draw: func (dye: DyeContext, modelView: Matrix4) {
+    draw: func (dye: DyeContext, inputModelView: Matrix4) {
         if (!visible) return
 
         if (dirty) {
             layout()
         }
 
-        glPushMatrix()
-        glTranslatef(pos x, pos y, 0)
         if (backgroundColorRect) {
-            backgroundColorRect size set!(size)
-            backgroundColorRect draw(dye, modelView)
+            backgroundColorRect pos set!(pos x, pos y - size y)
+            backgroundColorRect scale set!(size)
+            backgroundColorRect opacity = 0.1
+            backgroundColorRect render(dye, inputModelView)
         }
 
         for (c in children) {
-            c draw(dye, modelView)
+            c draw(dye, inputModelView)
         }
-        glPopMatrix()
     }
 
     setBackgroundColor: func (color: Color) {
         if (!backgroundColorRect) {
-            backgroundColorRect = GlRectangle new()
+            backgroundColorRect = GlRectangle new(vec2(1, 1))
             backgroundColorRect center = false
         }
         backgroundColorRect color set!(color)
@@ -453,7 +452,7 @@ Icon: class extends Widget {
     draw: func (dye: DyeContext, modelView: Matrix4) {
         if (!_sprite) { return }
         _sprite pos set!(pos)
-        _sprite render(dye, modelView)
+        _sprite draw(dye, modelView)
     }
 
     layout: func {
@@ -537,8 +536,7 @@ Label: class extends Widget {
 
     draw: func (dye: DyeContext, modelView: Matrix4) {
         _text color set!(color)
-        _text pos set!(pos)
-        _text render(dye, modelView)
+        _text draw(dye, modelView)
     }
 
     layout: func {
@@ -591,9 +589,6 @@ Button: class extends Label {
 Frame: class extends Panel {
 
     fontPath := static "assets/ttf/font.ttf"
-
-    // FIXME: should rock allow redefinitions that are static?
-    //logger := static Log getLogger(This name)
 
     scene: Scene
     input: Input
@@ -742,7 +737,12 @@ Frame: class extends Panel {
         super(dye, modelView)
 
         // then draw rest: dialogs, etc.
-        group draw(dye, modelView)
+        group drawChildren(dye, modelView)
+    }
+    
+    postLayoutSize: func {
+        super()
+        pos y = size y
     }
 
     /* Action handling */
