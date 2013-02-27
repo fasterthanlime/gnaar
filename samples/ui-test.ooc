@@ -5,7 +5,7 @@ import dye/[core, primitives, app]
 use gnaar
 import gnaar/[ui]
 
-main: func {
+main: func (argc: Int, argv: CString*) {
     UITest new() run(0.5)
 }
 
@@ -27,7 +27,7 @@ UITest: class extends App {
 
         // panel1 is red
         panel1 = Panel new()
-        //panel1 setPositionFlavor(PositionFlavor CENTER)
+        panel1 setPositionFlavor(PositionFlavor CENTER)
         panel1 setRelativeWidth(50)
         panel1 setRelativeHeight(50)
         panel1 setDisplayFlavor(DisplayFlavor INLINE)
