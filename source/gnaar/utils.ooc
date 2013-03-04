@@ -49,7 +49,21 @@ cpv: func ~fromVec2 (v: Vec2) -> CpVect {
 }
 
 vec2: func ~fromCpv (v: CpVect) -> Vec2 {
-    vec2(v x,v y)
+    vec2(v x, v y)
+}
+
+extend Vec2 {
+
+    set!: func ~fromCpv (v: CpVect) {
+        x = v x
+        y = v y
+    }
+
+    add!: func ~fromCpv (v: CpVect) {
+        x += v x
+        y += v y
+    }
+
 }
 
 /* Dye <-> Chipmunk physics/graphics sync */
