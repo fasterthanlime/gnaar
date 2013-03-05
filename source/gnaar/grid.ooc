@@ -2,6 +2,10 @@
 // sdk stuff
 import structs/[HashMap, ArrayList]
 
+// third-party stuff
+use dye
+import dye/[math]
+
 /**
  * An infinite, sparse grid, where you can put
  * objects wherever you feel like
@@ -53,6 +57,26 @@ SparseGrid: class <T> {
             row clear()
         )
         rows clear()
+    }
+
+    each: func (f: Func (Int, Int, T)) {
+        rows each(|rowNum, row|
+            row cols each(|colNum, item|
+                f(colNum, rowNum, item)
+            )
+        )
+    }
+
+    getBounds: func -> AABB2i {
+        bounds := AABB2i new()
+
+        rows each(|rowNum, row|
+            row cols each(|colNum, col|
+                bounds expand!(vec2i(colNum, rowNum))
+            )
+        )
+
+        bounds
     }
 
 }
