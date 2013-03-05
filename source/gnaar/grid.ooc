@@ -59,6 +59,12 @@ SparseGrid: class <T> {
         rows clear()
     }
 
+    contains?: func (colNum, rowNum: Int) -> Bool {
+        if (!rows contains?(rowNum)) return false
+        row := rows get(rowNum)
+        row cols contains?(colNum)
+    }
+
     each: func (f: Func (Int, Int, T)) {
         rows each(|rowNum, row|
             row cols each(|colNum, item|
