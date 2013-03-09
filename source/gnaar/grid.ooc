@@ -57,6 +57,7 @@ SparseGrid: class <T> {
             row clear()
         )
         rows clear()
+        rows = HashMap<Int, Row<T>> new()
     }
 
     contains?: func (colNum, rowNum: Int) -> Bool {
