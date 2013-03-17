@@ -1,17 +1,17 @@
 
+// third-party stuff
 use chipmunk
 import chipmunk
 
 use dye
 import dye/[core, input, sprite, text, primitives, math, anim]
 
-import math
-
 use yaml
 import yaml/[Parser, Document]
 
+// sdk stuff
+import math, math/Random
 import structs/[HashMap, List, ArrayList]
-
 import io/File
 
 /* radians <-> degrees conversion */
@@ -62,6 +62,11 @@ extend Vec2 {
     add!: func ~fromCpv (v: CpVect) {
         x += v x
         y += v y
+    }
+
+    random: static func (halfSide: Int) -> Vec2 {
+        vec2(Random randInt(-halfSide, halfSide) as Float,
+             Random randInt(-halfSide, halfSide) as Float)
     }
 
 }
