@@ -6,7 +6,7 @@ use gnaar
 import gnaar/[ui]
 
 main: func (argc: Int, argv: CString*) {
-    UITest new() run(0.5)
+    UITest new() run(1)
 }
 
 UITest: class extends App {

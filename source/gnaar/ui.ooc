@@ -265,7 +265,7 @@ Panel: class extends Widget {
         }
 
         if (backgroundColorRect) {
-            backgroundColorRect pos set!(pos x, pos y - size y)
+            backgroundColorRect pos set!(pos x, size y - pos y)
             
             // comparing floats is a bad idea, except when
             // you're setting them yourself
@@ -357,7 +357,7 @@ Panel: class extends Widget {
         }
 
         baseX := margin x
-        baseY := size y - margin y
+        baseY := margin y
 
         (x, y) := (baseX, baseY)
 
@@ -386,7 +386,7 @@ Panel: class extends Widget {
                 // ----------------------------------
                 case PositionFlavor CENTER =>
                     halfChildSize := child size mul(0.5)
-                    newpos := size mul(0.5) sub(halfChildSize)
+                    newpos := vec2(x, y) add(size mul(0.5)) sub(halfChildSize)
                     child pos set!(newpos)
                     logger debug("center child, pos = %s", child pos _)
 
@@ -642,6 +642,10 @@ Frame: class extends Panel {
     // Constructor
     init: func (=scene) {
         super()
+
+        // we lay things down from top to bottom, and (0, 0)
+        // is at the lower left corner
+        pos set!(0, scene dye height)
 
         input = scene input
         setSize(scene size x, scene size y)
