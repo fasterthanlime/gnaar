@@ -366,8 +366,14 @@ Panel: class extends Widget {
 
         newlined := true
 
+        logger debug("Got %d children to lay down the tempo to", children size)
+
         for (child in children) {
+            logger debug("Laying down a %s, of display flava %s and position flava %s", child class name,
+                child display toString(), child position toString())
+
             if (child display == DisplayFlavor BLOCK && !newlined) {
+                logger debug("BLOCK & !newlined, newlining.")
                 x = baseX
                 newlined = true
 
@@ -382,6 +388,7 @@ Panel: class extends Widget {
                     halfChildSize := child size mul(0.5)
                     newpos := size mul(0.5) sub(halfChildSize)
                     child pos set!(newpos)
+                    logger debug("center child, pos = %s", child pos _)
 
                 // ----------------------------------
                 case PositionFlavor STATIC =>
@@ -389,10 +396,12 @@ Panel: class extends Widget {
                         y -= child size y
                     }
                     child pos set!(x, y)
+                    logger debug("static child, pos = %s", child pos _)
 
                 // ----------------------------------
                 case PositionFlavor FIXED =>
                     child pos set!(child givenPos)
+                    logger debug("fixed child, pos = %s", child pos _)
             }
 
             if (child display == DisplayFlavor BLOCK) {
@@ -468,7 +477,7 @@ Icon: class extends Widget {
     draw: func (dye: DyeContext, modelView: Matrix4) {
         if (!_sprite) { return }
         _sprite pos set!(pos)
-        _sprite draw(dye, modelView)
+        _sprite render(dye, modelView)
     }
 
     layout: func {
@@ -552,7 +561,8 @@ Label: class extends Widget {
 
     draw: func (dye: DyeContext, modelView: Matrix4) {
         _text color set!(color)
-        _text draw(dye, modelView)
+        _text pos set!(pos)
+        _text render(dye, modelView)
     }
 
     layout: func {
@@ -794,6 +804,14 @@ PositionFlavor: enum {
     STATIC
     FIXED
     CENTER
+
+    toString: func -> String {
+        match this {
+            case This STATIC => "static"
+            case This FIXED => "fixed"
+            case This CENTER => "center"
+        }
+    }
 }
 
 SizeFlavor: enum {
@@ -814,5 +832,13 @@ DisplayFlavor: enum {
     INLINE
     BLOCK
     INLINEBLOCK
+
+    toString: func -> String {
+        match this {
+            case This INLINE => "inline"
+            case This BLOCK => "block"
+            case This INLINEBLOCK => "inlineblock"
+        }
+    }
 }
 
