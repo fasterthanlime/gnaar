@@ -36,6 +36,9 @@ UITest: class extends App {
 
     update: func {
         // nothang
+        frame layout()
+
+        "-----------------------------------" println()
     }
 
 }
