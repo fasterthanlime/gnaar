@@ -274,9 +274,8 @@ Panel: class extends Widget {
     collideTree: func (needle: Vec2, cb: Func (Widget, Bool)) {
         super(needle, cb)
 
-        subNeedle := needle sub(pos)
         for (child in children) {
-            child collideTree(subNeedle, cb)
+            child collideTree(needle, cb)
         }
     }
 
@@ -688,7 +687,7 @@ Frame: class extends Panel {
         group add(dialogGroup)
 
         initEvents()
-        prevMousePos set!(input getMousePos())
+        prevMousePos set!(toUIPos(input getMousePos()))
 
         scene add(this)
     }
@@ -715,8 +714,12 @@ Frame: class extends Panel {
         queue dispatch()
     }
 
+    toUIPos: func (v: Vec2) -> Vec2 {
+        vec2(v x, scene dye height - v y)
+    }
+
     updateMouse: func {
-        mousePos := input getMousePos()
+        mousePos := toUIPos(input getMousePos())
         delta = mousePos sub(prevMousePos)
 
         if (dragging) {
@@ -741,19 +744,18 @@ Frame: class extends Panel {
         // Everything after this point doesn't happen when we have dialogs
         if (!root?) return
 
-        uiMousePos := vec2(mousePos x, scene dye height - mousePos y)
-        collideTree(uiMousePos, |widget, touching| {
+        collideTree(mousePos, |widget, touching| {
             if (touching) {
                 if (!widget hovered) {
                     widget debug("Hovered! mousePos = %s, widget { pos: %s, size: %s}",
-                        uiMousePos _, widget pos _, widget size _)
+                        mousePos _, widget pos _, widget size _)
                     widget hovered = true
-                    widget process(MouseLeaveEvent new(uiMousePos))
+                    widget process(MouseLeaveEvent new(mousePos))
                 }
             } else {
                 if (widget hovered) {
                     widget hovered = false
-                    widget process(MouseEnterEvent new(uiMousePos))
+                    widget process(MouseEnterEvent new(mousePos))
                 }
             }
         })
@@ -772,7 +774,7 @@ Frame: class extends Panel {
                 dragging = false
                 queue push(DragStopEvent new())
             } else {
-                clickPos := input getMousePos()
+                clickPos := toUIPos(input getMousePos())
                 clickEvent := ClickEvent new(MouseButton LEFT, clickPos)
 
                 collideTree(clickPos, |widget, touching|
