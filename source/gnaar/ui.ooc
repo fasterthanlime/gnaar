@@ -75,6 +75,10 @@ Widget: class extends GlDrawable {
         dst set!(pos x, dye size y - pos y - size y)
     }
 
+    placeTop!: func (dye: DyeContext, dst: Vec2) {
+        dst set!(pos x, dye size y - pos y)
+    }
+
     getAttrs: func -> String {
         "{ display: %s, position: %s, givenPos: %s, givenSize: %s }" format(
             display toString(),
@@ -280,6 +284,7 @@ Panel: class extends Widget {
         if (!visible) return
 
         if (dirty) {
+            debug("Dirty!")
             layout()
         }
 
@@ -364,7 +369,13 @@ Panel: class extends Widget {
     }
 
     layout: func {
+        dirty = false
+
         debug("layout(), %d children, %s", children size, getAttrs())
+
+        sizeX := size x
+        sizeY := size y
+
         preLayoutSize()
 
         baseX := pos x + margin x
@@ -430,9 +441,16 @@ Panel: class extends Widget {
             child layout()
         }
 
+        debug("Original width/height = %.02f, %.02f", sizeX, sizeY)
         postLayoutSize()
-
-        dirty = false
+        debug("Post layout, width/height = %.02f, %.02f", size x, size y)
+        
+        if (sizeX != size x || sizeY != size y) {
+            if (parent) {
+                debug("Touching parent!")
+                parent touch()
+            }
+        }
     }
 
     absorb: func (props: HashMap<String, DocumentNode>) {
@@ -491,7 +509,7 @@ Icon: class extends Widget {
 
     draw: func (dye: DyeContext, modelView: Matrix4) {
         if (!_sprite) { return }
-        _sprite pos set!(pos)
+        place!(dye, _sprite pos)
         _sprite render(dye, modelView)
     }
 
@@ -577,7 +595,6 @@ Label: class extends Widget {
     draw: func (dye: DyeContext, modelView: Matrix4) {
         _text color set!(color)
         place!(dye, _text pos)
-        _text pos set!(pos x, size y - pos y)
         _text render(dye, modelView)
     }
 
@@ -724,16 +741,19 @@ Frame: class extends Panel {
         // Everything after this point doesn't happen when we have dialogs
         if (!root?) return
 
-        collideTree(mousePos, |widget, touching| {
+        uiMousePos := vec2(mousePos x, scene dye height - mousePos y)
+        collideTree(uiMousePos, |widget, touching| {
             if (touching) {
                 if (!widget hovered) {
+                    widget debug("Hovered! mousePos = %s, widget { pos: %s, size: %s}",
+                        uiMousePos _, widget pos _, widget size _)
                     widget hovered = true
-                    widget process(MouseLeaveEvent new(mousePos))
+                    widget process(MouseLeaveEvent new(uiMousePos))
                 }
             } else {
                 if (widget hovered) {
                     widget hovered = false
-                    widget process(MouseEnterEvent new(mousePos))
+                    widget process(MouseEnterEvent new(uiMousePos))
                 }
             }
         })
