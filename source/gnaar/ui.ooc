@@ -71,6 +71,10 @@ Widget: class extends GlDrawable {
         }
     }
 
+    place!: func (dye: DyeContext, dst: Vec2) {
+        dst set!(pos x, dye size y - pos y - size y)
+    }
+
     getAttrs: func -> String {
         "{ display: %s, position: %s, givenPos: %s, givenSize: %s }" format(
             display toString(),
@@ -280,7 +284,7 @@ Panel: class extends Widget {
         }
 
         if (backgroundColorRect) {
-            backgroundColorRect pos set!(pos x, dye size y - pos y - size y)
+            place!(dye, backgroundColorRect pos)
             
             // comparing floats is a bad idea, except when
             // you're setting them yourself
@@ -354,7 +358,7 @@ Panel: class extends Widget {
                         size y = child size y
                     }
                 }
-                debug("Height of %s inferred to %f", size y)
+                debug("Height inferred to %f", size y)
         }
 
     }
@@ -572,7 +576,8 @@ Label: class extends Widget {
 
     draw: func (dye: DyeContext, modelView: Matrix4) {
         _text color set!(color)
-        _text pos set!(pos)
+        place!(dye, _text pos)
+        _text pos set!(pos x, size y - pos y)
         _text render(dye, modelView)
     }
 
