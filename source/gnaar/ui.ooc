@@ -21,6 +21,8 @@ import math
 
 Widget: class extends GlDrawable {
 
+    logger := Log getLogger(class name)
+
     // can be null
     id := ""
 
@@ -58,6 +60,7 @@ Widget: class extends GlDrawable {
     }
 
     layout: func {
+        debug("layout() - nothing to do")
     }
 
     getDepth: func -> Int {
@@ -66,6 +69,19 @@ Widget: class extends GlDrawable {
         } else {
             0
         }
+    }
+
+    getAttrs: func -> String {
+        "{ display: %s, position: %s, givenPos: %s, givenSize: %s }" format(
+            display toString(),
+            position toString(),
+            givenPos toString(),
+            givenSize toString()
+        )
+    }
+
+    debug: func (msg: String, args: ...) {
+        logger debug(("  " * getDepth()) + msg, args)
     }
 
     setWidth: func ~length (value: Float) {
@@ -230,7 +246,6 @@ Widget: class extends GlDrawable {
 
 Panel: class extends Widget {
 
-    logger := Log getLogger(This name)
     children := ArrayList<Widget> new()
 
     margin := vec2(0, 0)
@@ -265,7 +280,7 @@ Panel: class extends Widget {
         }
 
         if (backgroundColorRect) {
-            backgroundColorRect pos set!(pos x, size y - pos y)
+            backgroundColorRect pos set!(pos x, dye size y - pos y - size y)
             
             // comparing floats is a bad idea, except when
             // you're setting them yourself
@@ -273,11 +288,8 @@ Panel: class extends Widget {
                 size y != backgroundColorRect size y) {
                 backgroundColorRect size set!(size)
                 backgroundColorRect rebuild()
-                logger debug("Rebuilding background color rect")
             }
 
-
-            backgroundColorRect opacity = 0.5
             backgroundColorRect render(dye, inputModelView)
         }
 
@@ -288,7 +300,7 @@ Panel: class extends Widget {
 
     setBackgroundColor: func (color: Color) {
         if (!backgroundColorRect) {
-            backgroundColorRect = GlRectangle new(size)
+            backgroundColorRect = GlRectangle new(vec2(size))
             backgroundColorRect center = false
         }
         backgroundColorRect color set!(color)
@@ -331,8 +343,7 @@ Panel: class extends Widget {
                     }
                     size x += child size x
                 }
-                logger debug("(%02d) Width of %s inferred to %f",
-                        getDepth(), class name, size x)
+                debug("Width inferred to %f", size x)
         }
 
         match height {
@@ -343,21 +354,17 @@ Panel: class extends Widget {
                         size y = child size y
                     }
                 }
-                logger debug("(%02d) Height of %s inferred to %f",
-                        getDepth(), class name, size y)
+                debug("Height of %s inferred to %f", size y)
         }
 
     }
 
     layout: func {
-        logger debug("(%02d) Packing %s - %p", getDepth(), class name, this)
+        debug("layout(), %d children, %s", children size, getAttrs())
         preLayoutSize()
-        for (child in children) {
-            child layout()
-        }
 
-        baseX := margin x
-        baseY := margin y
+        baseX := pos x + margin x
+        baseY := pos y + margin y
 
         (x, y) := (baseX, baseY)
 
@@ -366,14 +373,11 @@ Panel: class extends Widget {
 
         newlined := true
 
-        logger debug("Got %d children to lay down the tempo to", children size)
-
         for (child in children) {
-            logger debug("Laying down a %s, of display flava %s and position flava %s", child class name,
-                child display toString(), child position toString())
+            debug("Placing %s, %s", child class name, child getAttrs())
 
             if (child display == DisplayFlavor BLOCK && !newlined) {
-                logger debug("BLOCK & !newlined, newlining.")
+                debug("BLOCK & !newlined, newlining.")
                 x = baseX
                 newlined = true
 
@@ -388,26 +392,28 @@ Panel: class extends Widget {
                     halfChildSize := child size mul(0.5)
                     newpos := vec2(x, y) add(size mul(0.5)) sub(halfChildSize)
                     child pos set!(newpos)
-                    logger debug("center child, pos = %s", child pos _)
+                    debug("center child, { base: (%.2f, %.2f), size: %s }",
+                        x, y, size _, child pos _)
+                    debug("child { size: %s, pos: %s }", child size _, child pos _)
 
                 // ----------------------------------
                 case PositionFlavor STATIC =>
-                    if (child display == DisplayFlavor BLOCK) {
-                        y -= child size y
-                    }
                     child pos set!(x, y)
-                    logger debug("static child, pos = %s", child pos _)
+                    if (child display == DisplayFlavor BLOCK) {
+                        y += child size y
+                    }
+                    debug("static child, pos = %s", child pos _)
 
                 // ----------------------------------
                 case PositionFlavor FIXED =>
                     child pos set!(child givenPos)
-                    logger debug("fixed child, pos = %s", child pos _)
+                    debug("fixed child, pos = %s", child pos _)
             }
 
             if (child display == DisplayFlavor BLOCK) {
                 newlined = true
                 x = baseX
-                y -= padding y
+                y += padding y
             } else {
                 newlined = false
                 x += (child size x + padding x)
@@ -415,6 +421,11 @@ Panel: class extends Widget {
 
             previousChild = child
         }
+
+        for (child in children) {
+            child layout()
+        }
+
         postLayoutSize()
 
         dirty = false
@@ -643,10 +654,6 @@ Frame: class extends Panel {
     init: func (=scene) {
         super()
 
-        // we lay things down from top to bottom, and (0, 0)
-        // is at the lower left corner
-        pos set!(0, scene dye height)
-
         input = scene input
         setSize(scene size x, scene size y)
 
@@ -772,7 +779,6 @@ Frame: class extends Panel {
     
     postLayoutSize: func {
         super()
-        pos y = size y
     }
 
     /* Action handling */
