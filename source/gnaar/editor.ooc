@@ -205,6 +205,14 @@ Editor: class extends LevelBase {
                     camPos add!(0, camNudge)
                 case KeyCode KP8 => 
                     camPos sub!(0, camNudge)
+                case KeyCode H =>
+                    camPos sub!(camNudge, 0)
+                case KeyCode L =>
+                    camPos add!(camNudge, 0)
+                case KeyCode K =>
+                    camPos add!(0, camNudge)
+                case KeyCode J => 
+                    camPos sub!(0, camNudge)
                 case KeyCode I =>
                     if (activeLayer) {
                         activeLayer insert()
