@@ -68,7 +68,7 @@ extend GlDrawable {
     sync: func (body: CpBody) {
         bodyPos := body getPos()
         pos set!(bodyPos x, bodyPos y)
-        angle = toDegrees(body getAngle())
+        angle = (body getAngle() as Float) toDegrees()
     }
 
 }

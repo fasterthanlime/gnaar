@@ -23,6 +23,8 @@ Widget: class extends GlDrawable {
 
     logger := Log getLogger(class name)
 
+    debugOutput := static false
+
     // can be null
     id := ""
 
@@ -89,6 +91,7 @@ Widget: class extends GlDrawable {
     }
 
     debug: func (msg: String, args: ...) {
+        if (!debugOutput) return
         logger debug(("  " * getDepth()) + msg, args)
     }
 
