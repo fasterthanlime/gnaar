@@ -723,7 +723,8 @@ Frame: class extends Panel {
         delta = mousePos sub(prevMousePos)
 
         if (dragging) {
-            queue push(DragEvent new(delta))
+            // translate delta from 'UI coordinates' to 'window coordinates'
+            queue push(DragEvent new(vec2(delta x, 0 - delta y)))
         }
 
         if (dragStart) {

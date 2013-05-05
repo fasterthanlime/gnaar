@@ -14,16 +14,6 @@ import math, math/Random
 import structs/[HashMap, List, ArrayList]
 import io/File
 
-/* radians <-> degrees conversion */
-
-toRadians: func (degrees: Float) -> Float {
-    degrees * PI / 180.0
-}
-
-toDegrees: func (radians: Float) -> Float {
-    radians * 180.0 / PI
-}
-
 extend CpSpace {
 
     createStaticBox: func ~fromGlRectangle (rect: GlRectangle) -> (CpBody, CpShape) {
