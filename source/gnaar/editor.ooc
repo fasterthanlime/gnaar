@@ -121,9 +121,9 @@ Editor: class extends LevelBase {
 
     updateCamera: func {
         if (draggingCam) {
-            camPos sub!(frame delta)
+            camPos add!(-frame delta x, frame delta y)
         }
-        worldGroup pos set!(center() sub(camPos))
+        worldGroup pos interpolate!(center() sub(camPos), 0.1)
     }
 
     /* Coordinate */
