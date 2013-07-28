@@ -17,8 +17,6 @@ import gnaar/[utils, ui]
 
 UILoader: class {
 
-    root: Frame
-
     logger := Log getLogger(This name)
     factory: UIFactory
 
@@ -26,7 +24,7 @@ UILoader: class {
 
     }
 
-    load: func (frame: Frame, path: String) {
+    load: func (panel: Panel, path: String) {
         doc := parseYaml(path)
         if (!doc) {
             logger error("Could not find UI interface file: %s", path)
@@ -38,7 +36,7 @@ UILoader: class {
         doc toMap() each(|k, v|
             widget := parseWidget(k, v toMap())
             if (widget) {
-                frame add(widget)
+                panel add(widget)
             }
         )
     }

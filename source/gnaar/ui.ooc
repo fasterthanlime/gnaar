@@ -537,6 +537,7 @@ Label: class extends Widget {
 
     _text: GlText
 
+    margin := vec2(0, 0)
     color := Color new(220, 220, 220)
 
     init: func (value := "", fontSize := 30) {
@@ -597,6 +598,7 @@ Label: class extends Widget {
     draw: func (dye: DyeContext, modelView: Matrix4) {
         _text color set!(color)
         place!(dye, _text pos)
+        _text pos add!(margin x, - margin y)
         _text render(dye, modelView)
     }
 
@@ -614,6 +616,9 @@ Label: class extends Widget {
 
                 case "font-size" =>
                     fontSize = v toInt()
+
+                case "margin" =>
+                    margin set!(v toVec2())
             }
         )
     }
