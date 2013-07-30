@@ -398,8 +398,8 @@ Panel: class extends Widget {
 
         preLayoutSize()
 
-        baseX := pos x
-        baseY := pos y
+        baseX := pos x + padding x
+        baseY := pos y + padding y
 
         (x, y) := (baseX, baseY)
 
