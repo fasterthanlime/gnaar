@@ -21,6 +21,8 @@ import math
 
 Widget: class extends GlDrawable {
 
+    margin := vec2(0, 0)
+
     logger := Log getLogger(class name)
 
     debugOutput := static false
@@ -177,6 +179,9 @@ Widget: class extends GlDrawable {
     absorb: func (props: HashMap<String, DocumentNode>) {
         props each(|k, v|
             match k {
+                case "margin" =>
+                    margin set!(v toVec2())
+
                 case "width" =>
                     parseSize(v toScalar(), |flavor, value|
                         width = flavor
@@ -253,13 +258,38 @@ Widget: class extends GlDrawable {
         null
     }
 
+    // layout stuff
+
+    preLayoutSize: func {
+        match width {
+            case SizeFlavor LENGTH =>
+                size x = givenSize x
+            case SizeFlavor PERCENTAGE =>
+                if (!parent) {
+                    Exception new("Percentage-sized width with no parent") throw()
+                }
+
+                size x = getParentWidth() * (givenSize x * 0.01)
+        }
+
+        match height {
+            case SizeFlavor LENGTH =>
+                size y = givenSize y
+            case SizeFlavor PERCENTAGE =>
+                if (!parent) {
+                    Exception new("Percentage-sized height with no parent") throw()
+                }
+
+                size y = getParentHeight() * (givenSize y * 0.01)
+        }
+    }
+
 }
 
 Panel: class extends Widget {
 
     children := ArrayList<Widget> new()
 
-    margin := vec2(0, 0)
     padding := vec2(0, 0)
 
     backgroundColorRect: GlRectangle
@@ -272,6 +302,18 @@ Panel: class extends Widget {
         children add(widget)
         widget parent = this
         touch()
+    }
+
+    remove: func (widget: Widget) {
+        children remove(widget)
+        widget parent = null
+        touch()
+    }
+
+    clear: func {
+        while (!children empty?()) {
+            remove(children first())
+        }
     }
 
     collideTree: func (needle: Vec2, cb: Func (Widget, Bool)) {
@@ -317,30 +359,6 @@ Panel: class extends Widget {
         backgroundColorRect color set!(color)
     }
 
-    preLayoutSize: func {
-        match width {
-            case SizeFlavor LENGTH =>
-                size x = givenSize x
-            case SizeFlavor PERCENTAGE =>
-                if (!parent) {
-                    Exception new("Percentage-sized width with no parent") throw()
-                }
-
-                size x = getParentWidth() * (givenSize x * 0.01)
-        }
-
-        match height {
-            case SizeFlavor LENGTH =>
-                size y = givenSize y
-            case SizeFlavor PERCENTAGE =>
-                if (!parent) {
-                    Exception new("Percentage-sized height with no parent") throw()
-                }
-
-                size y = getParentHeight() * (givenSize y * 0.01)
-        }
-    }
-
     postLayoutSize: func {
         match width {
             case SizeFlavor AUTO =>
@@ -380,8 +398,8 @@ Panel: class extends Widget {
 
         preLayoutSize()
 
-        baseX := pos x + margin x
-        baseY := pos y + margin y
+        baseX := pos x
+        baseY := pos y
 
         (x, y) := (baseX, baseY)
 
@@ -395,35 +413,35 @@ Panel: class extends Widget {
 
             if (child display == DisplayFlavor BLOCK && !newlined) {
                 debug("BLOCK & !newlined, newlining.")
-                x = baseX
+                x = baseX + child margin x
                 newlined = true
 
                 if (previousChild) {
-                    y -= (previousChild size y + padding y)
+                    y -= (previousChild size y + padding y + previousChild margin y)
                 }
             }
 
             match (child position) {
                 // ----------------------------------
                 case PositionFlavor CENTER =>
-                    halfChildSize := child size mul(0.5)
+                    halfChildSize := child size add(child margin mul(2.0)) mul(0.5)
                     newpos := vec2(x, y) add(size mul(0.5)) sub(halfChildSize)
                     child pos set!(newpos)
                     debug("center child, { base: (%.2f, %.2f), size: %s }",
                         x, y, size _, child pos _)
-                    debug("child { size: %s, pos: %s }", child size _, child pos _)
+                    debug("child { size: %s, margin: %s, pos: %s }", child size _, child margin _, child pos _)
 
                 // ----------------------------------
                 case PositionFlavor STATIC =>
-                    child pos set!(x, y)
+                    child pos set!(x + child margin x, y + child margin y)
                     if (child display == DisplayFlavor BLOCK) {
-                        y += child size y
+                        y += child size y + child margin y * 2.0
                     }
                     debug("static child, pos = %s", child pos _)
 
                 // ----------------------------------
                 case PositionFlavor FIXED =>
-                    child pos set!(child givenPos)
+                    child pos set!(child givenPos add(child margin))
                     debug("fixed child, pos = %s", child pos _)
             }
 
@@ -433,7 +451,7 @@ Panel: class extends Widget {
                 y += padding y
             } else {
                 newlined = false
-                x += (child size x + padding x)
+                x += (child size x + child margin x * 2.0 + padding x)
             }
 
             previousChild = child
@@ -460,9 +478,6 @@ Panel: class extends Widget {
 
         props each(|k, v|
             match k {
-                case "margin" =>
-                    margin set!(v toVec2())
-
                 case "padding" =>
                     padding set!(v toVec2())
 
@@ -493,6 +508,7 @@ Panel: class extends Widget {
 Icon: class extends Widget {
 
     _sprite: GlSprite
+    initialSize := vec2(0, 0)
 
     init: func { }
 
@@ -505,19 +521,33 @@ Icon: class extends Widget {
         set (=src) {
             _sprite = GlSprite new(src)
             _sprite center = false
-            layout()
+            initialSize set!(_sprite size)
+            touch()
         }
     }
 
     draw: func (dye: DyeContext, modelView: Matrix4) {
         if (!_sprite) { return }
+        if (dirty) layout()
+
         place!(dye, _sprite pos)
         _sprite render(dye, modelView)
     }
 
     layout: func {
         if (!_sprite) { return }
-        size set!(_sprite size)
+
+        preLayoutSize()
+        if (size x != 0 && size y != 0) {
+            // all good!
+        } else {
+            size set!(_sprite size)
+        }
+
+        if (!_sprite size equals?(size, 0.001)) {
+            _sprite size set!(size)
+            _sprite rebuild()
+        }
     }
 
     absorb: func (props: HashMap<String, DocumentNode>) {
@@ -537,7 +567,6 @@ Label: class extends Widget {
 
     _text: GlText
 
-    margin := vec2(0, 0)
     color := Color new(220, 220, 220)
 
     init: func (value := "", fontSize := 30) {
@@ -598,7 +627,6 @@ Label: class extends Widget {
     draw: func (dye: DyeContext, modelView: Matrix4) {
         _text color set!(color)
         place!(dye, _text pos)
-        _text pos add!(margin x, - margin y)
         _text render(dye, modelView)
     }
 
@@ -616,9 +644,6 @@ Label: class extends Widget {
 
                 case "font-size" =>
                     fontSize = v toInt()
-
-                case "margin" =>
-                    margin set!(v toVec2())
             }
         )
     }
