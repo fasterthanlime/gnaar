@@ -644,6 +644,9 @@ Label: class extends Widget {
 
                 case "font-size" =>
                     fontSize = v toInt()
+
+                case "color" =>
+                    color = parseColor(v)
             }
         )
     }
