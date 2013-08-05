@@ -856,6 +856,22 @@ Frame: class extends Panel {
         actionCallbacks add(ActionCallback new(f))
     }
 
+    onAction: func ~exact (id: String, f: Func (Action)) {
+        onAction(|action|
+            if (action id == id) {
+                f(action)
+            }
+        )
+    }
+
+    onActionPrefix: func (prefix: String, f: Func (Action)) {
+        onAction(|action|
+            if (action id startsWith?(id)) {
+                f(action)
+            }
+        )
+    }
+
 }
 
 Action: class {
