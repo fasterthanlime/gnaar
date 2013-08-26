@@ -644,6 +644,9 @@ Label: class extends Widget {
 
                 case "font-size" =>
                     fontSize = v toInt()
+
+                case "color" =>
+                    color = parseColor(v)
             }
         )
     }
@@ -854,6 +857,22 @@ Frame: class extends Panel {
 
     onAction: func (f: Func (Action)) {
         actionCallbacks add(ActionCallback new(f))
+    }
+
+    onAction: func ~exact (id: String, f: Func (Action)) {
+        onAction(|action|
+            if (action id == id) {
+                f(action)
+            }
+        )
+    }
+
+    onActionPrefix: func (prefix: String, f: Func (Action)) {
+        onAction(|action|
+            if (action id startsWith?(id)) {
+                f(action)
+            }
+        )
     }
 
 }
