@@ -1,78 +1,14 @@
 
-// third-party stuff
-use chipmunk
-import chipmunk
-
-use dye
-import dye/[core, input, sprite, text, primitives, math, anim]
-
+// third party
 use yaml
 import yaml/[Parser, Document]
 
-// sdk stuff
-import math, math/Random
-import structs/[HashMap, List, ArrayList]
+use dye
+import dye/[core, math]
+
+// sdk
 import io/File
-import text/StringTokenizer
-
-extend CpSpace {
-
-    createStaticBox: func ~fromGlRectangle (rect: GlRectangle) -> (CpBody, CpShape) {
-        body := CpBody newStatic()
-        body setPos(cpv(rect pos))
-        shape := CpBoxShape new(body, rect size x, rect size y)
-        return (body, shape)
-    }
-
-    createStaticBox: func ~fromGlSprite (rect: GlSprite) -> (CpBody, CpShape) {
-        body := CpBody newStatic()
-        body setPos(cpv(rect pos))
-        shape := CpBoxShape new(body, rect size x, rect size y)
-        return (body, shape)
-    }
-
-}
-
-/* Dye <-> Chipmunk Vector conversion */
-
-cpv: func ~fromVec2 (v: Vec2) -> CpVect {
-    cpv(v x, v y)
-}
-
-vec2: func ~fromCpv (v: CpVect) -> Vec2 {
-    vec2(v x, v y)
-}
-
-extend Vec2 {
-
-    set!: func ~fromCpv (v: CpVect) {
-        x = v x
-        y = v y
-    }
-
-    add!: func ~fromCpv (v: CpVect) {
-        x += v x
-        y += v y
-    }
-
-    random: static func (halfSide: Int) -> Vec2 {
-        vec2(Random randInt(-halfSide, halfSide) as Float,
-             Random randInt(-halfSide, halfSide) as Float)
-    }
-
-}
-
-/* Dye <-> Chipmunk physics/graphics sync */
-
-extend GlDrawable {
-
-    sync: func (body: CpBody) {
-        bodyPos := body getPos()
-        pos set!(bodyPos x, bodyPos y)
-        angle = (body getAngle() as Float) toDegrees()
-    }
-
-}
+import structs/[HashMap, List, ArrayList]
 
 /* YAML utils */
 
@@ -217,48 +153,6 @@ BoundingBox: class {
             (needle y >= topLeft y) &&
             (needle y <= bottomRight y)
         )
-    }
-
-}
-
-/* Time formatting / parsing utility */
-
-TimeHelper: class {
-
-    MILLIS_IN_MINUTES := static 60 * 1000
-    MILLIS_IN_SECONDS := static 1000
-    MILLIS_IN_TENTHS := static 10
-
-    format: static func (millis: Long) -> String {
-	if (millis == -1) {
-	    return "Unknown"
-	}
-
-	// Look, I'm not always proud of my code, okay?
-	rest := millis
-
-	minutes := (rest - (rest % MILLIS_IN_MINUTES)) / MILLIS_IN_MINUTES
-	rest -= minutes * MILLIS_IN_MINUTES	
-
-	seconds := (rest - (rest % MILLIS_IN_SECONDS)) / MILLIS_IN_SECONDS
-	rest -= seconds * MILLIS_IN_SECONDS
-
-	tenths := (rest - (rest % MILLIS_IN_TENTHS)) / MILLIS_IN_TENTHS
-
-	"%d\"%02d'%02d" format(minutes, seconds, tenths)
-    }
-
-    parse: static func (s: String) -> Long {
-	tokens := s split("\"")
-	
-	minutes := tokens get(0) toInt()
-	secondsAndTenths := tokens get(1)
-
-	tokens2 := secondsAndTenths split("'")
-	seconds := tokens2 get(0) toInt()
-	tenths := tokens2 get(1) toInt()
-
-	minutes * MILLIS_IN_MINUTES + seconds * MILLIS_IN_SECONDS + tenths * MILLIS_IN_TENTHS
     }
 
 }
