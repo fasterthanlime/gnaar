@@ -7,7 +7,7 @@ use yaml
 import yaml/[Document]
 
 // our stuff
-import gnaar/[objects, utils]
+import gnaar/[objects, utils, yaml]
 
 /**
  * A deck is a set of animations you can play in any order,
@@ -52,8 +52,11 @@ Deck: class extends GnObject {
         )
 
         if (!source) {
-            Exception new("Missing source for animation %s in file %s") throw()
+            raise("Missing source for animation %s in file %s")
         }
+        "Loaded anim from %s, %d rows, %d frames, %d frameDuration" printfln(
+            source, numRows, numFrames, frameDuration)
+
         grid := GlGridSprite new(source, numFrames, numRows)
         anim := GlAnim new(grid)
         anim frameDuration = frameDuration

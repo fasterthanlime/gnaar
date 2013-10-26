@@ -1,6 +1,6 @@
 
 // our stuff
-import gnaar/[dialogs, events, utils]
+import gnaar/[dialogs, events, utils, yaml]
 
 // third-party stuff
 use dye

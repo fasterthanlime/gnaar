@@ -12,7 +12,7 @@ import deadlogger/[Log, Logger]
 
 /* internal */
 use gnaar
-import gnaar/[utils, editor, objects]
+import gnaar/[utils, yaml, editor, objects]
 
 LevelSaver: class {
 
