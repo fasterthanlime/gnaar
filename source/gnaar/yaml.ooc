@@ -23,6 +23,7 @@ parseYaml: func (path: String) -> DocumentNode {
 
     doc := Document new()
     parser parseAll(doc)
+    parser destroy()
     doc getRootNode()
 }
 
