@@ -123,7 +123,7 @@ Editor: class extends LevelBase {
         if (draggingCam) {
             camPos add!(-frame delta x, frame delta y)
         }
-        worldGroup pos interpolate!(center() sub(camPos), 0.1)
+        worldGroup pos lerp!(center() sub(camPos), 0.1)
     }
 
     /* Coordinate */
