@@ -15,6 +15,8 @@ SparseGrid: class <T> {
     rows := HashMap<Int, Row<T>> new()
     listeners := ArrayList<GridNotificationListener<T>> new()
 
+    init: func
+
     put: func (col, row: Int, obj: T) -> T {
         getRow(row) put(col, obj)
     }
