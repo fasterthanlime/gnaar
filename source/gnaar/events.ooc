@@ -97,6 +97,8 @@ DragStartEvent: class extends GEvent {
 
 DragStopEvent: class extends GEvent {
 
+    init: func
+
     getName: func -> String {
         "dragstop"
     }
