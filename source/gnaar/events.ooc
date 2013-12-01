@@ -16,6 +16,8 @@ EventQueue: class {
     subscribers := ArrayList<EventListener> new()
     events := ArrayList<GEvent> new()
 
+    init: func
+
     push: func (e: GEvent) {
         events add(e)
     }
