@@ -19,6 +19,7 @@ Deck: class extends GnObject {
     group: GlAnimSet { get set }
     ticks := 1
     path: String
+    currentAnim: String
 
     playing: Bool { get {
         group playing
@@ -59,8 +60,6 @@ Deck: class extends GnObject {
         if (!source) {
             raise("Missing source for animation %s in file %s")
         }
-        "Loaded anim from %s, %d rows, %d frames, %d frameDuration" printfln(
-            source, numRows, numFrames, frameDuration)
 
         grid := GlGridSprite new(source, numFrames, numRows)
         anim := GlAnim new(grid)
@@ -69,6 +68,7 @@ Deck: class extends GnObject {
     }
 
     play: func (name: String, looping := true) {
+        currentAnim = name
         group play(name, looping)
     }
 
