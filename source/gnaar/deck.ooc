@@ -17,7 +17,12 @@ import gnaar/[objects, utils, yaml]
 Deck: class extends GnObject {
 
     group: GlAnimSet { get set }
+    ticks := 1
     path: String
+
+    playing: Bool { get {
+        group playing
+    } }
 
     init: func (=path) {
         group = GlAnimSet new()
@@ -63,12 +68,12 @@ Deck: class extends GnObject {
         anim
     }
 
-    play: func (name: String) {
-        group play(name)
+    play: func (name: String, looping := true) {
+        group play(name, looping)
     }
 
     update: func -> Bool {
-        group update()
+        group update(ticks)
 
         true
     }
