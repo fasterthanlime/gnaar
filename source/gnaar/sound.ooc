@@ -34,6 +34,7 @@ Boombox: class {
 
     init: func {
         bleep = Bleep new()
+        bleep onMusicStop(|| onMusicStops())
     }
 
     // Music code
@@ -46,12 +47,24 @@ Boombox: class {
         currentMusic = name
     }
 
+    stopMusic: func {
+        bleep stopMusic()
+    }
+
+    fadeMusic: func (millis: Int) {
+        bleep fadeMusic(millis)
+    }
+
     onMusicStops: func {
         currentMusic = null
     }
 
     musicPlays?: func -> Bool {
-        currentMusic != null
+        bleep musicPlaying?()
+    }
+
+    musicPaused?: func -> Bool {
+        bleep musicPaused?()
     }
 
     // SFX code
