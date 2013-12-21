@@ -31,6 +31,7 @@ Boombox: class {
     // state
     samples := HashMap<String, Sample> new()
     currentMusic: String
+    loops := 0
 
     init: func {
         bleep = Bleep new()
@@ -43,8 +44,23 @@ Boombox: class {
         if (config mute) return
         if (currentMusic == name) return
 
-        bleep playMusic("%s/%s.ogg" format(config musicPath, name), loops)
+        _playMusic(name, loops)
         currentMusic = name
+    }
+
+    _playMusic: func (name: String, =loops) {
+        bleep playMusic("%s/%s.ogg" format(config musicPath, name), loops)
+    }
+
+    setMute: func (mute: Bool) {
+        config mute = mute
+        if (mute) {
+            bleep stopMusic()
+        } else {
+            if (currentMusic) {
+                _playMusic(currentMusic, loops)
+            }
+        }
     }
 
     stopMusic: func {

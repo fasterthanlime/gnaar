@@ -27,6 +27,16 @@ parseYaml: func (path: String) -> DocumentNode {
     doc getRootNode()
 }
 
+parseYamlString: func (content: String) -> DocumentNode {
+    parser := YAMLParser new()
+    parser setInputString(content)
+
+    doc := Document new()
+    parser parseAll(doc)
+    parser destroy()
+    doc getRootNode()
+}
+
 extend DocumentNode {
 
     toMap: func -> HashMap<String, DocumentNode> {
