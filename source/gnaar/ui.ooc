@@ -49,14 +49,14 @@ Widget: class extends GlDrawable {
     // if true, need a layout before display
     dirty := false
 
-    draw: func (dye: DyeContext, modelView: Matrix4) {
+    draw: func (pass: Pass, modelView: Matrix4) {
         // override stuff here
     }
 
-    render: func (dye: DyeContext, modelView: Matrix4) {
+    render: func (pass: Pass, modelView: Matrix4) {
         // don't compute model view - children's positions have
         // absolute coordinates
-        draw(dye, modelView)
+        draw(pass, modelView)
     }
 
     touch: func {
@@ -75,12 +75,12 @@ Widget: class extends GlDrawable {
         }
     }
 
-    place!: func (dye: DyeContext, dst: Vec2) {
-        dst set!(pos x, dye size y - pos y - size y)
+    place!: func (pass: Pass, dst: Vec2) {
+        dst set!(pos x, pass size y - pos y - size y)
     }
 
-    placeTop!: func (dye: DyeContext, dst: Vec2) {
-        dst set!(pos x, dye size y - pos y)
+    placeTop!: func (pass: Pass, dst: Vec2) {
+        dst set!(pos x, pass size y - pos y)
     }
 
     getAttrs: func -> String {
@@ -324,7 +324,7 @@ Panel: class extends Widget {
         }
     }
 
-    draw: func (dye: DyeContext, inputModelView: Matrix4) {
+    draw: func (pass: Pass, inputModelView: Matrix4) {
         if (!visible) return
 
         if (dirty) {
@@ -333,7 +333,7 @@ Panel: class extends Widget {
         }
 
         if (backgroundColorRect) {
-            place!(dye, backgroundColorRect pos)
+            place!(pass, backgroundColorRect pos)
             
             // comparing floats is a bad idea, except when
             // you're setting them yourself
@@ -343,11 +343,11 @@ Panel: class extends Widget {
                 backgroundColorRect rebuild()
             }
 
-            backgroundColorRect render(dye, inputModelView)
+            backgroundColorRect render(pass, inputModelView)
         }
 
         for (c in children) {
-            c draw(dye, inputModelView)
+            c draw(pass, inputModelView)
         }
     }
 
@@ -526,12 +526,12 @@ Icon: class extends Widget {
         }
     }
 
-    draw: func (dye: DyeContext, modelView: Matrix4) {
+    draw: func (pass: Pass, modelView: Matrix4) {
         if (!_sprite) { return }
         if (dirty) layout()
 
-        place!(dye, _sprite pos)
-        _sprite render(dye, modelView)
+        place!(pass, _sprite pos)
+        _sprite render(pass, modelView)
     }
 
     layout: func {
@@ -624,10 +624,10 @@ Label: class extends Widget {
         _text = GlText new(fontPath, value, fontSize)
     }
 
-    draw: func (dye: DyeContext, modelView: Matrix4) {
+    draw: func (pass: Pass, modelView: Matrix4) {
         _text color set!(color)
-        place!(dye, _text pos)
-        _text render(dye, modelView)
+        place!(pass, _text pos)
+        _text render(pass, modelView)
     }
 
     layout: func {
@@ -660,14 +660,14 @@ Button: class extends Label {
 
     init: super func
 
-    draw: func (dye: DyeContext, modelView: Matrix4) {
+    draw: func (pass: Pass, modelView: Matrix4) {
         if (hovered) {
             color set!(baseColor)
         } else {
             color set!(baseColor mul(0.7))
         }
 
-        super(dye, modelView)
+        super(pass, modelView)
     }
 
     process: func (e: GEvent) {
@@ -833,12 +833,12 @@ Frame: class extends Panel {
         )
     }
 
-    draw: func (dye: DyeContext, modelView: Matrix4) {
+    draw: func (pass: Pass, modelView: Matrix4) {
         // draw children
-        super(dye, modelView)
+        super(pass, modelView)
 
         // then draw rest: dialogs, etc.
-        group drawChildren(dye, modelView)
+        group drawChildren(pass, modelView)
     }
     
     postLayoutSize: func {

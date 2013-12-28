@@ -33,7 +33,16 @@ Boombox: class {
     currentMusic: String
     loops := 0
 
-    init: func {
+    new: static func -> This {
+        try {
+            return This new~private()
+        } catch (e: Exception) {
+            logger error("Couldn't load audio system because of: #{e formatMessage()}")
+        }
+        return DummyBoombox new()
+    }
+
+    init: func ~private {
         bleep = Bleep new()
         bleep onMusicStop(|| onMusicStops())
     }

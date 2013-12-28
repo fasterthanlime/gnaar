@@ -61,7 +61,7 @@ InputDialog: class extends Dialog {
         text pos set!(- rect size x / 2 + 10, -20)
         group add(text)
 
-        group center!(frame scene dye)
+        group center!(frame scene dye mainPass)
     }
 
     update: func {
@@ -121,7 +121,7 @@ AlertDialog: class extends Dialog {
         text pos set!(- rect size x / 2 + 10, 0)
         group add(text)
 
-        group center!(frame scene dye)
+        group center!(frame scene dye mainPass)
     }
 
     update: func {
