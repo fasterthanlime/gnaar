@@ -86,6 +86,7 @@ UILoader: class {
 }
 
 UIFactory: class {
+    init: func
     
     spawn: func (type: String, props: HashMap<String, DocumentNode>) -> Widget {
         widget: Widget = match type {
