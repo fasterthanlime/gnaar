@@ -113,7 +113,9 @@ UIFactory: class {
 
 UILoaderException: class extends Exception {
 
-    init: super func
+    init: func (.message) {
+        super(message)
+    }
 
 }
 
