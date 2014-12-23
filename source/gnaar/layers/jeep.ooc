@@ -16,7 +16,7 @@ use yaml
 import yaml/[Parser, Document]
 
 /* internal */
-import gnaar/[editor, ui, loader, saver, dialogs, objects, utils, grid]
+import gnaar/[editor, ui, loader, saver, dialogs, objects, utils, grid, yaml]
 
 JeepFactory: class extends ObjectFactory {
 
@@ -267,8 +267,8 @@ JeepObject: class extends EditorObject {
         left   = (grid get(posi x - 1, posi y) != null)
         right  = (grid get(posi x + 1, posi y) != null)
 
-        sprite x = leftRightToX(left, right)
-        sprite y = topBottomToY(top, bottom)
+        sprite col = leftRightToX(left, right)
+        sprite row = topBottomToY(top, bottom)
     }
     
     leftRightToX: static func (left, right: Bool) -> Int {
