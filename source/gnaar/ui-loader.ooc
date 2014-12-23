@@ -13,7 +13,7 @@ import deadlogger/[Log, Logger]
 import structs/[ArrayList, HashMap]
 
 // our stuff
-import gnaar/[utils, ui]
+import gnaar/[utils, ui, yaml]
 
 UILoader: class {
 
